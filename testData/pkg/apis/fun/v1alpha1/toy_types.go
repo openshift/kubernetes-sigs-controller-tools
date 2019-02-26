@@ -59,38 +59,46 @@ type ToySpec struct {
 	Alias string `json:"alias,omitempty"`
 
 	// +kubebuilder:validation:Enum=1,2,3
+	// +required
 	Rank int `json:"rank"`
 
 	Comment []byte `json:"comment,omitempty"`
 
 	// This is a simple string without validation.
+	// +required
 	Description string `json:"description"`
 
 	// This is a comment on an object field.
+	// +required
 	Template v1.PodTemplateSpec `json:"template"`
 
 	Claim v1.PersistentVolumeClaim `json:"claim,omitempty"`
 
 	//This is a dummy comment.
 	// Just checking if the multi-line comments are working or not.
+	// +required
 	Replicas *int32 `json:"replicas"`
 
 	// This is a newly added field.
 	// Using this for testing purpose.
+	// +required
 	Rook *intstr.IntOrString `json:"rook"`
 
 	// Used this for testing fieldNames with number.
 	S3Log ToyS3LogConfig `json:"s3Log"`
 
 	// This is a comment on a map field.
+	// +required
 	Location map[string]string `json:"location"`
 
 	// This is an IPv4 address.
 	// +kubebuilder:validation:Format=ipv4
+	// +required
 	Address string `json:"address"`
 
 	// This is a list of IPv4 addresses.
 	// +kubebuilder:validation:Format=ipv4
+	// +required
 	Addresses []string `json:"addresses"`
 }
 
@@ -100,6 +108,7 @@ type ToyStatus struct {
 	// Important: Run "make" to regenerate code after modifying this file
 
 	// It tracks the number of replicas.
+	// +required
 	Replicas int32 `json:"replicas"`
 }
 
