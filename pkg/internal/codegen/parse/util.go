@@ -231,6 +231,20 @@ func hasSingular(t *types.Type) bool {
 	return false
 }
 
+// hasPlural returns true if t is an APIResource annotated with
+// +kubebuilder:plural
+func hasPlural(t *types.Type) bool {
+	if !IsAPIResource(t) {
+		return false
+	}
+	for _, c := range append(append([]string{}, t.SecondClosestCommentLines...), t.CommentLines...) {
+		if strings.Contains(c, "+kubebuilder:plural"){
+			return true
+		}
+	}
+	return false
+}
+
 // hasRequired returns true if t is annotated with
 // +required
 func hasRequired(t *types.Type) bool {
@@ -345,6 +359,16 @@ func getSingularName(c *types.Type) string {
 		panic(errors.Errorf("Must specify a value to use with +kubebuilder:singular comment for type %v", c.Name))
 	}
 	return singular
+}
+
+// getPluralName returns the value of the +kubebuilder:plural tag
+func getPluralName(c *types.Type) string {
+	comments := Comments(append(append([]string{}, c.SecondClosestCommentLines...), c.CommentLines...))
+	plural := comments.getTag("kubebuilder:plural", "=")
+	if len(plural) == 0 {
+		panic(errors.Errorf("Must specify a value to use with +kubebuilder:plural comment for type %v", c.Name))
+	}
+	return plural
 }
 
 // getDocAnnotation parse annotations of "+kubebuilder:doc:" with tags of "warning" or "doc" for control generating doc config.
