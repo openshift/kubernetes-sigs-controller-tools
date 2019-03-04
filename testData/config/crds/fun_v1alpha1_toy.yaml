@@ -80,6 +80,7 @@ spec:
             comment:
               format: byte
               type: string
+              nullable: true
             description:
               description: This is a simple string without validation.
               type: string
