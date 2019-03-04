@@ -56,6 +56,7 @@ type ToySpec struct {
 	// +required
 	Rank int `json:"rank"`
 
+	// +nullable
 	Comment []byte `json:"comment,omitempty"`
 
 	// This is a simple string without validation.
