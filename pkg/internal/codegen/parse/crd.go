@@ -171,7 +171,7 @@ func (b *APIs) typeToJSONSchemaProps(t *types.Type, found sets.String, comments 
 		}, b.getTime()
 	case duration:
 		return v1beta1.JSONSchemaProps{
-			Type: "string",
+			Type:        "string",
 			Description: parseDescription(comments),
 		}, b.getDuration()
 	case meta:
@@ -464,6 +464,10 @@ func (b *APIs) parseObjectValidation(t *types.Type, found sets.String, comments 
 // getValidation parses the validation tags from the comment and sets the
 // validation rules on the given JSONSchemaProps.
 func getValidation(comment string, props *v1beta1.JSONSchemaProps) {
+	if strings.TrimSpace(comment) == "+nullable" {
+		props.Nullable = true
+	}
+
 	comment = strings.TrimLeft(comment, " ")
 	if !strings.HasPrefix(comment, "+kubebuilder:validation:") {
 		return
