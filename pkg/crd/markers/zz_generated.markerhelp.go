@@ -29,7 +29,7 @@ func (Default) Help() *markers.DefinitionHelp {
 		Category: "CRD validation",
 		DetailedHelp: markers.DetailedHelp{
 			Summary: "sets the default value for this field. ",
-			Details: " A default value will be accepted as any value valid for the field. Formatting for common types include: boolean: `true`, string: `Cluster`, numerical: `1.24`, array: `{1,2}`, object: `{policy: \"delete\"}`). Defaults should be defined in pruned form, and only best-effort validation will be performed. Full validation of a default requires submission of the containing CRD to an apiserver.",
+			Details: "A default value will be accepted as any value valid for the field. Formatting for common types include: boolean: `true`, string: `Cluster`, numerical: `1.24`, array: `{1,2}`, object: `{policy: \"delete\"}`). Defaults should be defined in pruned form, and only best-effort validation will be performed. Full validation of a default requires submission of the containing CRD to an apiserver.",
 		},
 		FieldHelp: map[string]markers.DetailedHelp{
 			"Value": markers.DetailedHelp{
@@ -325,6 +325,28 @@ func (UniqueItems) Help() *markers.DefinitionHelp {
 		DetailedHelp: markers.DetailedHelp{
 			Summary: "specifies that all items in this list must be unique.",
 			Details: "",
+		},
+		FieldHelp: map[string]markers.DetailedHelp{},
+	}
+}
+
+func (XEmbeddedResource) Help() *markers.DefinitionHelp {
+	return &markers.DefinitionHelp{
+		Category: "CRD validation",
+		DetailedHelp: markers.DetailedHelp{
+			Summary: "EmbeddedResource marks a fields as an embedded resource with apiVersion, kind and metadata fields. ",
+			Details: "An embedded resource is a value that has apiVersion, kind and metadata fields. They are validated implicitly according to the semantics of the currently running apiserver. It is not necessary to add any additional schema for these field, yet it is possible. This can be combined with PreserveUnknownFields.",
+		},
+		FieldHelp: map[string]markers.DetailedHelp{},
+	}
+}
+
+func (XPreserveUnknownFields) Help() *markers.DefinitionHelp {
+	return &markers.DefinitionHelp{
+		Category: "CRD pruning",
+		DetailedHelp: markers.DetailedHelp{
+			Summary: "PreserveUnknownFields stops the apiserver from pruning fields which are not specified. ",
+			Details: "By default the apiserver drops unknown fields from the request payload during the decoding step.stops the API server. This marker stop the API server from doing so. It affects fields recursively, but switches back to normal pruning behaviour if nested  properties or additionalProperties are specified in the schema. This can either be true or undefined. False is forbidden.",
 		},
 		FieldHelp: map[string]markers.DetailedHelp{},
 	}
