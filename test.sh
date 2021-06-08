@@ -99,7 +99,7 @@ function setup_envs {
 
 header_text "using tools"
 
-which gometalinter.v2
+which golangci-lint
 
 # fetch the testing binaries - e.g. apiserver and etcd
 fetch_kb_tools
@@ -107,38 +107,35 @@ fetch_kb_tools
 # setup testing env
 setup_envs
 
-header_text "running go vet"
+header_text "generating marker help"
+pushd cmd/controller-gen > /dev/null
+  go generate
+popd > /dev/null
 
-go vet ./pkg/... ./cmd/...
+header_text "running golangci-lint"
 
-# go get is broken for golint.  re-enable this once it is fixed.
-header_text "running golint"
-
-golint -set_exit_status ./pkg/...
-
-header_text "running gometalinter.v2"
-
-gometalinter.v2 --disable-all \
-    --deadline 5m \
+golangci-lint run --disable-all \
     --enable=misspell \
-    --enable=structcheck \
     --enable=golint \
+    --enable=govet \
     --enable=deadcode \
     --enable=goimports \
     --enable=errcheck \
     --enable=varcheck \
-    --enable=goconst \
     --enable=unparam \
     --enable=ineffassign \
     --enable=nakedret \
-    --enable=interfacer \
     --enable=misspell \
     --enable=gocyclo \
-    --skip=parse \
+    --enable=gosec \
+    --enable=gofmt \
+    --deadline=5m \
     ./pkg/... ./cmd/...
-# enable this after fixing linting error
-#    --enable=gosec \
+
+# --enable=structcheck \  # doesn't understand embedded structs
+# --enable=goconst \  # complains about constants that shouldn't be constants
+# --enable=interfacer \ # just kinda strange, deprecated, has bad suggestions that defeat self-documenting code
 
 header_text "running go test"
 
-go test ./pkg/... ./cmd/... -parallel 4
+go test -race ./pkg/... ./cmd/... -parallel 4

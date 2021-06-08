@@ -5,6 +5,17 @@
 
 The Kubernetes controller-tools Project is a set of go libraries for building Controllers.
 
+## Development
+
+Clone this project, and iterate on changes by running `./test.sh`.
+
+This project uses Go modules to manage its dependencies, so feel free to work from outside
+of your `GOPATH`. However, if you'd like to continue to work from within your `GOPATH`, please
+export `GO111MODULE=on`.
+
+## Releasing and Versioning
+
+See [VERSIONING.md](VERSIONING.md).
 
 ## Community, discussion, contribution, and support
 
