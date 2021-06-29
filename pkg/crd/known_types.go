@@ -18,7 +18,7 @@ package crd
 import (
 	apiext "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 
-	"sigs.k8s.io/controller-tools/pkg/loader"
+	"github.com/openshift/kubernetes-sigs-controller-tools/pkg/loader"
 )
 
 // KnownPackages overrides types in some comment packages that have custom validation

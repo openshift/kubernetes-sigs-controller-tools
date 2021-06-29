@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"io"
 
-	"sigs.k8s.io/controller-tools/pkg/genall/help"
+	"github.com/openshift/kubernetes-sigs-controller-tools/pkg/genall/help"
 
 	"github.com/fatih/color"
 )

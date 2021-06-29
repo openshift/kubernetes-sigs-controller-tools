@@ -21,7 +21,7 @@ limitations under the License.
 package crd
 
 import (
-	"sigs.k8s.io/controller-tools/pkg/markers"
+	"github.com/openshift/kubernetes-sigs-controller-tools/pkg/markers"
 )
 
 func (Generator) Help() *markers.DefinitionHelp {

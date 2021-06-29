@@ -20,7 +20,7 @@ import (
 	"fmt"
 
 	apiext "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
-	"sigs.k8s.io/controller-tools/pkg/markers"
+	"github.com/openshift/kubernetes-sigs-controller-tools/pkg/markers"
 )
 
 // TopologyMarkers specify topology markers (i.e. markers that describe if a

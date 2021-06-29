@@ -22,7 +22,7 @@ import (
 	"reflect"
 	"strings"
 
-	"sigs.k8s.io/controller-tools/pkg/loader"
+	"github.com/openshift/kubernetes-sigs-controller-tools/pkg/loader"
 )
 
 // extractDoc extracts documentation from the given node, skipping markers

@@ -11,10 +11,10 @@ import (
 
 	flag "github.com/spf13/pflag"
 
-	"sigs.k8s.io/controller-tools/pkg/genall"
-	"sigs.k8s.io/controller-tools/pkg/genall/help"
-	prettyhelp "sigs.k8s.io/controller-tools/pkg/genall/help/pretty"
-	"sigs.k8s.io/controller-tools/pkg/markers"
+	"github.com/openshift/kubernetes-sigs-controller-tools/pkg/genall"
+	"github.com/openshift/kubernetes-sigs-controller-tools/pkg/genall/help"
+	prettyhelp "github.com/openshift/kubernetes-sigs-controller-tools/pkg/genall/help/pretty"
+	"github.com/openshift/kubernetes-sigs-controller-tools/pkg/markers"
 )
 
 var (
@@ -46,7 +46,7 @@ const (
 package %[1]s
 
 import (
-	"sigs.k8s.io/controller-tools/pkg/markers"
+	"github.com/openshift/kubernetes-sigs-controller-tools/pkg/markers"
 )
 
 `

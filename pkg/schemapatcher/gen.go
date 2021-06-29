@@ -29,12 +29,12 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	kyaml "sigs.k8s.io/yaml"
 
-	crdgen "sigs.k8s.io/controller-tools/pkg/crd"
-	crdmarkers "sigs.k8s.io/controller-tools/pkg/crd/markers"
-	"sigs.k8s.io/controller-tools/pkg/genall"
-	"sigs.k8s.io/controller-tools/pkg/loader"
-	"sigs.k8s.io/controller-tools/pkg/markers"
-	yamlop "sigs.k8s.io/controller-tools/pkg/schemapatcher/internal/yaml"
+	crdgen "github.com/openshift/kubernetes-sigs-controller-tools/pkg/crd"
+	crdmarkers "github.com/openshift/kubernetes-sigs-controller-tools/pkg/crd/markers"
+	"github.com/openshift/kubernetes-sigs-controller-tools/pkg/genall"
+	"github.com/openshift/kubernetes-sigs-controller-tools/pkg/loader"
+	"github.com/openshift/kubernetes-sigs-controller-tools/pkg/markers"
+	yamlop "github.com/openshift/kubernetes-sigs-controller-tools/pkg/schemapatcher/internal/yaml"
 )
 
 // NB(directxman12): this code is quite fragile, but there are a sufficient

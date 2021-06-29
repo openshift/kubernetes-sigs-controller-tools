@@ -29,7 +29,7 @@ import (
 	"github.com/onsi/ginkgo"
 	pkgstest "golang.org/x/tools/go/packages/packagestest"
 
-	"sigs.k8s.io/controller-tools/pkg/loader"
+	"github.com/openshift/kubernetes-sigs-controller-tools/pkg/loader"
 )
 
 // fakeT wraps Ginkgo's fake testing.T with a real testing.T

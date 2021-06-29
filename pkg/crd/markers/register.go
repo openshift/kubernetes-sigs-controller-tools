@@ -19,7 +19,7 @@ package markers
 import (
 	"reflect"
 
-	"sigs.k8s.io/controller-tools/pkg/markers"
+	"github.com/openshift/kubernetes-sigs-controller-tools/pkg/markers"
 )
 
 type definitionWithHelp struct {

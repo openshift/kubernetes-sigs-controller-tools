@@ -21,7 +21,7 @@ limitations under the License.
 package webhook
 
 import (
-	"sigs.k8s.io/controller-tools/pkg/markers"
+	"github.com/openshift/kubernetes-sigs-controller-tools/pkg/markers"
 )
 
 func (Config) Help() *markers.DefinitionHelp {

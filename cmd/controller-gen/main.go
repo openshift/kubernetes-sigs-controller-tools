@@ -24,16 +24,16 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"sigs.k8s.io/controller-tools/pkg/crd"
-	"sigs.k8s.io/controller-tools/pkg/deepcopy"
-	"sigs.k8s.io/controller-tools/pkg/genall"
-	"sigs.k8s.io/controller-tools/pkg/genall/help"
-	prettyhelp "sigs.k8s.io/controller-tools/pkg/genall/help/pretty"
-	"sigs.k8s.io/controller-tools/pkg/markers"
-	"sigs.k8s.io/controller-tools/pkg/rbac"
-	"sigs.k8s.io/controller-tools/pkg/schemapatcher"
-	"sigs.k8s.io/controller-tools/pkg/version"
-	"sigs.k8s.io/controller-tools/pkg/webhook"
+	"github.com/openshift/kubernetes-sigs-controller-tools/pkg/crd"
+	"github.com/openshift/kubernetes-sigs-controller-tools/pkg/deepcopy"
+	"github.com/openshift/kubernetes-sigs-controller-tools/pkg/genall"
+	"github.com/openshift/kubernetes-sigs-controller-tools/pkg/genall/help"
+	prettyhelp "github.com/openshift/kubernetes-sigs-controller-tools/pkg/genall/help/pretty"
+	"github.com/openshift/kubernetes-sigs-controller-tools/pkg/markers"
+	"github.com/openshift/kubernetes-sigs-controller-tools/pkg/rbac"
+	"github.com/openshift/kubernetes-sigs-controller-tools/pkg/schemapatcher"
+	"github.com/openshift/kubernetes-sigs-controller-tools/pkg/version"
+	"github.com/openshift/kubernetes-sigs-controller-tools/pkg/webhook"
 )
 
 //go:generate go run ../helpgen/main.go paths=../../pkg/... generate:headerFile=../../boilerplate.go.txt,year=2019

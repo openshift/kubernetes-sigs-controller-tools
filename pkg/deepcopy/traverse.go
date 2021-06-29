@@ -26,8 +26,8 @@ import (
 	"unicode"
 	"unicode/utf8"
 
-	"sigs.k8s.io/controller-tools/pkg/loader"
-	"sigs.k8s.io/controller-tools/pkg/markers"
+	"github.com/openshift/kubernetes-sigs-controller-tools/pkg/loader"
+	"github.com/openshift/kubernetes-sigs-controller-tools/pkg/markers"
 )
 
 // NB(directxman12): This code is a bit of a byzantine mess.

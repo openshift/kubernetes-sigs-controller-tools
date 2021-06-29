@@ -23,7 +23,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"sigs.k8s.io/controller-tools/pkg/loader"
+	"github.com/openshift/kubernetes-sigs-controller-tools/pkg/loader"
 )
 
 // nopCloser is a WriteCloser whose Close
