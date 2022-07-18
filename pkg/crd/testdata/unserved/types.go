@@ -21,6 +21,18 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+// CronJobSpec defines the desired state of CronJob
+type CronJobSpec struct {
+	// This tests that markers that are allowed on both fields and types are applied to fields
+	// +kubebuilder:validation:MinLength=4
+	TwoOfAKindPart0 string `json:"twoOfAKindPart0"`
+
+	// +kubebuilder:validation:Minimum=-2
+	// +kubebuilder:validation:Maximum=2
+	// +kubebuilder:validation:MultipleOf=2
+	Int32WithValidations int32 `json:"int32WithValidations"`
+}
+
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 // +kubebuilder:resource:singular=mycronjob
@@ -32,6 +44,8 @@ type CronJob struct {
 	 */
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
+
+	Spec CronJobSpec `json:"spec,omitempty"`
 }
 
 // +kubebuilder:object:root=true

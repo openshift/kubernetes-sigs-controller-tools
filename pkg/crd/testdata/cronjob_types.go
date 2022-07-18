@@ -16,7 +16,7 @@ limitations under the License.
 // TODO(directxman12): test this across both versions (right now we're just
 // trusting k/k conversion, which is probably fine though)
 
-//go:generate ../../../.run-controller-gen.sh crd paths=./;./deprecated;./unserved output:dir=.
+//go:generate ../../../.run-controller-gen.sh crd:ignoreUnexportedFields=true,allowDangerousTypes=true paths=./;./deprecated;./unserved;./job/... output:dir=.
 
 // +groupName=testdata.kubebuilder.io
 // +versionName=v1
@@ -134,8 +134,12 @@ type CronJobSpec struct {
 	// +kubebuilder:validation:nullable
 	UnprunedEmbeddedResource runtime.RawExtension `json:"unprunedEmbeddedResource"`
 
-	// This tests that a type-level pruning maker works.
+	// This tests that a type-level pruning marker works.
 	UnprunedFromType Preserved `json:"unprunedFomType"`
+
+	// This tests that a type-level pruning marker combined with a field-level pruning marker works.
+	// +kubebuilder:pruning:PreserveUnknownFields
+	UnprunedFromTypeAndField Preserved `json:"unprunedFomTypeAndField"`
 
 	// This tests that associative lists work.
 	// +listType=map
@@ -143,13 +147,23 @@ type CronJobSpec struct {
 	// +listMapKey=secondary
 	AssociativeList []AssociativeType `json:"associativeList"`
 
+	// This tests that associative lists work via a nested type.
+	NestedAssociativeList NestedAssociativeList `json:"nestedassociativeList"`
+
 	// A map that allows different actors to manage different fields
 	// +mapType=granular
 	MapOfInfo map[string][]byte `json:"mapOfInfo"`
 
+	// A map that allows different actors to manage different fields via a nested type.
+	NestedMapOfInfo NestedMapOfInfo `json:"nestedMapOfInfo"`
+
 	// A struct that can only be entirely replaced
 	// +structType=atomic
 	StructWithSeveralFields NestedObject `json:"structWithSeveralFields"`
+
+	// A struct that can only be entirely replaced via a nested type.
+	// +structType=atomic
+	NestedStructWithSeveralFields NestedStructWithSeveralFields `json:"nestedStructWithSeveralFields"`
 
 	// This tests that type references are properly flattened
 	// +kubebuilder:validation:optional
@@ -181,6 +195,44 @@ type CronJobSpec struct {
 
 	// Maps of arrays of things-that-aren’t-strings are permitted
 	MapOfArraysOfFloats map[string][]bool `json:"mapOfArraysOfFloats,omitempty"`
+
+	// +kubebuilder:validation:Minimum=-0.5
+	// +kubebuilder:validation:Maximum=1.5
+	// +kubebuilder:validation:MultipleOf=0.5
+	FloatWithValidations float64 `json:"floatWithValidations"`
+
+	// +kubebuilder:validation:Minimum=-0.5
+	// +kubebuilder:validation:Maximum=1.5
+	// +kubebuilder:validation:MultipleOf=0.5
+	Float64WithValidations float64 `json:"float64WithValidations"`
+
+	// +kubebuilder:validation:Minimum=-2
+	// +kubebuilder:validation:Maximum=2
+	// +kubebuilder:validation:MultipleOf=2
+	IntWithValidations int `json:"intWithValidations"`
+
+	// +kubebuilder:validation:Minimum=-2
+	// +kubebuilder:validation:Maximum=2
+	// +kubebuilder:validation:MultipleOf=2
+	Int32WithValidations int32 `json:"int32WithValidations"`
+
+	// This tests that unexported fields are skipped in the schema generation
+	unexportedField string
+
+	// This tests that both unexported and exported inline fields are not skipped in the schema generation
+	unexportedStruct `json:",inline"`
+	ExportedStruct   `json:",inline"`
+
+	// Test of the expression-based validation rule marker, with optional message.
+	// +kubebuilder:validation:XValidation:rule="self.size() % 2 == 0",message="must have even length"
+	// +kubebuilder:validation:XValidation:rule="true"
+	StringWithEvenLength string `json:"stringWithEvenLength,omitempty"`
+
+	// Checks that fixed-length arrays work
+	Array [3]int `json:"array,omitempty"`
+
+	// Checks that arrays work when the type contains a composite literal
+	ArrayUsingCompositeLiteral [len(struct{ X [3]int }{}.X)]string `json:"arrayUsingCompositeLiteral,omitempty"`
 }
 
 type ContainsNestedMap struct {
@@ -225,6 +277,9 @@ type NestedObject struct {
 	Bar bool   `json:"bar"`
 }
 
+// +structType=atomic
+type NestedStructWithSeveralFields NestedObject
+
 type JustNestedObject NestedObject
 
 // +kubebuilder:validation:MinProperties=1
@@ -233,6 +288,22 @@ type MinMaxObject struct {
 	Foo string `json:"foo,omitempty"`
 	Bar string `json:"bar,omitempty"`
 	Baz string `json:"baz,omitempty"`
+}
+
+type unexportedStruct struct {
+	// This tests that exported fields are not skipped in the schema generation
+	Foo string `json:"foo"`
+
+	// This tests that unexported fields are skipped in the schema generation
+	bar string
+}
+
+type ExportedStruct struct {
+	// This tests that exported fields are not skipped in the schema generation
+	Baz string `json:"baz"`
+
+	// This tests that unexported fields are skipped in the schema generation
+	qux string
 }
 
 type RootObject struct {
@@ -244,6 +315,14 @@ type AssociativeType struct {
 	Secondary int    `json:"secondary"`
 	Foo       string `json:"foo"`
 }
+
+// +listType=map
+// +listMapKey=name
+// +listMapKey=secondary
+type NestedAssociativeList []AssociativeType
+
+// +mapType=granular
+type NestedMapOfInfo map[string][]byte
 
 // +kubebuilder:validation:MinLength=4
 // This tests that markers that are allowed on both fields and types are applied to types
