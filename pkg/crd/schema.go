@@ -451,6 +451,10 @@ func structToSchema(ctx *schemaContext, structType *ast.StructType) *apiextensio
 		if field.Name != "" && ctx.ignoreUnexportedFields && !ast.IsExported(field.Name) {
 			continue
 		}
+		// Skip the field if it has a marker for a FeatureSet that is not the FeatureSet we're generating for.
+		if !mayHandleField(field) {
+			continue
+		}
 
 		jsonTag, hasTag := field.Tag.Lookup("json")
 		if !hasTag {
