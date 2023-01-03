@@ -100,7 +100,7 @@ function setup_envs {
 header_text "using tools"
 
 if ! which golangci-lint 2>&1 >/dev/null; then
-  curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.45.2
+  curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.49.0
   export PATH=$PATH:$(go env GOPATH)/bin
 fi
 
@@ -120,12 +120,11 @@ header_text "running golangci-lint"
 
 golangci-lint run --disable-all \
     --enable=misspell \
-    --enable=golint \
+    --enable=revive \
     --enable=govet \
-    --enable=deadcode \
+    --enable=unused \
     --enable=goimports \
     --enable=errcheck \
-    --enable=varcheck \
     --enable=unparam \
     --enable=ineffassign \
     --enable=nakedret \
