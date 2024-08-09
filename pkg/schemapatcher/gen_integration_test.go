@@ -17,7 +17,6 @@ limitations under the License.
 package schemapatcher_test
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -44,7 +43,7 @@ var _ = Describe("CRD Patching From Parsing to Editing", func() {
 		rt, err := genall.Generators{&crdSchemaGen}.ForRoots("./...")
 		Expect(err).NotTo(HaveOccurred())
 
-		outputDir, err := ioutil.TempDir("", "controller-tools-test")
+		outputDir, err := os.MkdirTemp("", "controller-tools-test")
 		Expect(err).NotTo(HaveOccurred())
 		defer os.RemoveAll(outputDir)
 		rt.OutputRules.Default = genall.OutputToDirectory(outputDir)
@@ -70,7 +69,7 @@ var _ = Describe("CRD Patching From Parsing to Editing", func() {
 		rt, err := genall.Generators{&crdSchemaGen}.ForRoots("./...")
 		Expect(err).NotTo(HaveOccurred())
 
-		outputDir, err := ioutil.TempDir("", "controller-tools-test")
+		outputDir, err := os.MkdirTemp("", "controller-tools-test")
 		Expect(err).NotTo(HaveOccurred())
 		defer os.RemoveAll(outputDir)
 		rt.OutputRules.Default = genall.OutputToDirectory(outputDir)
@@ -80,19 +79,19 @@ var _ = Describe("CRD Patching From Parsing to Editing", func() {
 		Expect(rt.Run()).To(BeFalse(), "unexpectedly had errors")
 
 		By("loading the output files")
-		expectedFiles, err := ioutil.ReadDir("expected")
+		expectedFiles, err := os.ReadDir("expected")
 		Expect(err).NotTo(HaveOccurred())
 
 		for _, expectedFile := range expectedFiles {
 			By("reading the expected and actual files for " + expectedFile.Name())
-			actualContents, err := ioutil.ReadFile(filepath.Join(outputDir, expectedFile.Name()))
+			actualContents, err := os.ReadFile(filepath.Join(outputDir, expectedFile.Name()))
 			Expect(err).NotTo(HaveOccurred())
 
-			expectedContents, err := ioutil.ReadFile(filepath.Join("expected", expectedFile.Name()))
+			expectedContents, err := os.ReadFile(filepath.Join("expected", expectedFile.Name()))
 			Expect(err).NotTo(HaveOccurred())
 
 			By("checking that the expected and actual files for " + expectedFile.Name() + " are identical")
-			Expect(actualContents).To(Equal(expectedContents), "contents not as expected, check pkg/schemapatcher/testdata/README.md for more details.\n\nDiff:\n\n%s", cmp.Diff(string(actualContents), string(expectedContents)))
+			Expect(actualContents).To(MatchYAML(expectedContents), "contents not as expected, check pkg/schemapatcher/testdata/README.md for more details.\n\nDiff:\n\n%s", cmp.Diff(string(actualContents), string(expectedContents)))
 		}
 	})
 })

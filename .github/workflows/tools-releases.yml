@@ -1,0 +1,61 @@
+name: Package controller-runtime envtest
+
+on:
+  push:
+    branches:
+      - main
+      - master
+    paths:
+      - 'hack/envtest/_matrix/*.yaml'
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # tag=v4.1.7
+      - name: Get changed files
+        id: changed-files
+        uses: tj-actions/changed-files@6b2903bdce6310cfbddd87c418f253cf29b2dec9 # tag=v44.5.6
+        with:
+          files: |
+            hack/envtest/_matrix/*.yaml
+      - name: Setup package release version
+        id: release-version
+        run: |
+            if [[ ${{ steps.changed-files.outputs.all_changed_files_count }} != 1 ]]; then
+              echo "One Kubernetes patch version files should be changed for a release, found ${{ steps.changed-files.outputs.all_changed_files_count }}"
+              exit 1
+            fi
+
+            for changed_file in ${{ steps.changed-files.outputs.all_changed_files }}; do
+              export KUBERNETES_VERSION=$(echo "${changed_file}" | grep -oP '(?<=/)[^/]+(?=\.yaml)')
+              echo "KUBERNETES_VERSION=$KUBERNETES_VERSION" >> $GITHUB_ENV
+            done
+      - name: Build packages
+        run: |
+          make release-envtest KUBERNETES_VERSION=${{ env.KUBERNETES_VERSION }}
+      - name: Release
+        uses: softprops/action-gh-release@c062e08bd532815e2082a85e87e3ef29c3e6d191 # tag=v2.0.8
+        with:
+          tag_name: envtest-${{ env.KUBERNETES_VERSION }}
+          draft: false
+          make_latest: false
+          files: |
+            out/envtest-*.tar.gz
+            out/envtest-*.tar.gz.sha512
+          fail_on_unmatched_files: true
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@c5a7806660adbe173f04e3e038b0ccdcd758773c # tag=v6.1.0
+        with:
+          commit-message: Promote envtest release for Kubernetes ${{ env.KUBERNETES_VERSION }}
+          title: ":seedling: Promotion of envtest release for Kubernetes ${{ env.KUBERNETES_VERSION }}"
+          body: |
+            This PR promotes the envtest release for Kubernetes ${{ env.KUBERNETES_VERSION }}.
+          branch: promote-envtest-${{ env.KUBERNETES_VERSION }}
+          add-paths: |
+            envtest-releases.yaml

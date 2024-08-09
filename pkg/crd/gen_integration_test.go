@@ -19,7 +19,6 @@ package crd_test
 import (
 	"bytes"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -93,7 +92,7 @@ var _ = Describe("CRD Generation proper defaulting", func() {
 		Expect(gen.Generate(ctx)).NotTo(HaveOccurred())
 
 		By("loading the desired YAML")
-		expectedFile, err := ioutil.ReadFile(filepath.Join(genDir, "bar.example.com_foos.yaml"))
+		expectedFile, err := os.ReadFile(filepath.Join(genDir, "bar.example.com_foos.yaml"))
 		Expect(err).NotTo(HaveOccurred())
 		expectedFile = fixAnnotations(expectedFile)
 
@@ -109,16 +108,53 @@ var _ = Describe("CRD Generation proper defaulting", func() {
 		Expect(gen.Generate(ctx2)).NotTo(HaveOccurred())
 
 		By("loading the desired YAMLs")
-		expectedFileFoos, err := ioutil.ReadFile(filepath.Join(genDir, "bar.example.com_foos.yaml"))
+		expectedFileFoos, err := os.ReadFile(filepath.Join(genDir, "bar.example.com_foos.yaml"))
 		Expect(err).NotTo(HaveOccurred())
 		expectedFileFoos = fixAnnotations(expectedFileFoos)
-		expectedFileZoos, err := ioutil.ReadFile(filepath.Join(genDir, "zoo", "bar.example.com_zooes.yaml"))
+		expectedFileZoos, err := os.ReadFile(filepath.Join(genDir, "zoo", "bar.example.com_zoos.yaml"))
 		Expect(err).NotTo(HaveOccurred())
 		expectedFileZoos = fixAnnotations(expectedFileZoos)
 
 		By("comparing the two, output must be deterministic because groupKinds are sorted")
 		expectedOut := string(expectedFileFoos) + string(expectedFileZoos)
 		Expect(out.buf.String()).To(Equal(expectedOut), cmp.Diff(out.buf.String(), expectedOut))
+	})
+
+	It("should add preserveUnknownFields=false when specified", func() {
+		By("calling Generate")
+		no := false
+		gen := &crd.Generator{
+			CRDVersions: []string{"v1"},
+			DeprecatedV1beta1CompatibilityPreserveUnknownFields: &no,
+		}
+		Expect(gen.Generate(ctx)).NotTo(HaveOccurred())
+
+		By("searching preserveUnknownFields")
+		Expect(out.buf.String()).To(ContainSubstring("preserveUnknownFields: false"))
+	})
+
+	It("should add preserveUnknownFields=true when specified", func() {
+		By("calling Generate")
+		yes := true
+		gen := &crd.Generator{
+			CRDVersions: []string{"v1"},
+			DeprecatedV1beta1CompatibilityPreserveUnknownFields: &yes,
+		}
+		Expect(gen.Generate(ctx)).NotTo(HaveOccurred())
+
+		By("searching preserveUnknownFields")
+		Expect(out.buf.String()).To(ContainSubstring("preserveUnknownFields: true"))
+	})
+
+	It("should not add preserveUnknownFields when not specified", func() {
+		By("calling Generate")
+		gen := &crd.Generator{
+			CRDVersions: []string{"v1"},
+		}
+		Expect(gen.Generate(ctx)).NotTo(HaveOccurred())
+
+		By("searching preserveUnknownFields")
+		Expect(out.buf.String()).NotTo(ContainSubstring("preserveUnknownFields"))
 	})
 })
 
@@ -131,7 +167,7 @@ type outputRule struct {
 	buf *bytes.Buffer
 }
 
-func (o *outputRule) Open(_ *loader.Package, itemPath string) (io.WriteCloser, error) {
+func (o *outputRule) Open(_ *loader.Package, _ string) (io.WriteCloser, error) {
 	return nopCloser{o.buf}, nil
 }
 

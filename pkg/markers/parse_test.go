@@ -171,6 +171,9 @@ var _ = Describe("Parsing", func() {
 
 	Context("of individual arguments", func() {
 		It("should support bare strings", argParseTestCase{arg: Argument{Type: StringType}, raw: `some string here!`, output: "some string here!"}.Run)
+		It("should support bare strings containing number-ish values 1", argParseTestCase{arg: Argument{Type: StringType}, raw: `aa 0Baaa aaa`, output: "aa 0Baaa aaa"}.Run)
+		It("should support bare strings containing number-ish values 2", argParseTestCase{arg: Argument{Type: StringType}, raw: `/tmp/tmp-CHECKCRD-0B7LDeoZta`, output: "/tmp/tmp-CHECKCRD-0B7LDeoZta"}.Run)
+		It("should support bare strings containing number-ish values 3", argParseTestCase{arg: Argument{Type: StringType}, raw: `.0B7LDeoZt`, output: ".0B7LDeoZt"}.Run)
 		It("should support double-quoted strings", argParseTestCase{arg: Argument{Type: StringType}, raw: `"some; string, \nhere"`, output: "some; string, \nhere"}.Run)
 		It("should support raw strings", argParseTestCase{arg: Argument{Type: StringType}, raw: "`some; string, \\nhere`", output: `some; string, \nhere`}.Run)
 		It("should support integers", argParseTestCase{arg: Argument{Type: IntType}, raw: "42", output: 42}.Run)
@@ -187,6 +190,7 @@ var _ = Describe("Parsing", func() {
 		It("should support delimitted slices of delimitted slices", argParseTestCase{arg: sliceOSlice, raw: "{{1,1},{2,3},{5,8}}", output: sliceOSliceOut}.Run)
 
 		It("should support maps", argParseTestCase{arg: Argument{Type: MapType, ItemType: &Argument{Type: StringType}}, raw: "{formal: hello, `informal`: `hi!`}", output: map[string]string{"formal": "hello", "informal": "hi!"}}.Run)
+		It("should work with empty maps (which are equal to empty lists in the output)", argParseTestCase{arg: Argument{Type: MapType, ItemType: &Argument{Type: StringType}}, raw: "{}", output: map[string]string{}}.Run)
 
 		Context("with any value", func() {
 			anyArg := Argument{Type: AnyType}

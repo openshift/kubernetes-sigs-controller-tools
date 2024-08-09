@@ -13,9 +13,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-//go:generate ../../../../.run-controller-gen.sh crd:crdVersions=v1beta1 paths=. output:dir=.
-//go:generate mv bar.example.com_zooes.yaml bar.example.com_zooes.v1beta1.yaml
-//go:generate ../../../../.run-controller-gen.sh crd:crdVersions=v1 paths=. output:dir=.
+//go:generate ../../../../../.run-controller-gen.sh crd:crdVersions=v1beta1 paths=. output:dir=.
+//go:generate mv bar.example.com_zoos.yaml bar.example.com_zoos.v1beta1.yaml
+//go:generate ../../../../../.run-controller-gen.sh crd:crdVersions=v1 paths=. output:dir=.
 
 // +groupName=bar.example.com
 package zoo
@@ -28,6 +28,7 @@ type ZooSpec struct {
 	// This tests that defaulted fields are stripped for v1beta1,
 	// but not for v1
 	// +kubebuilder:default=zooDefaultString
+	// +kubebuilder:example=zooExampleString
 	DefaultedString string `json:"defaultedString"`
 }
 type ZooStatus struct{}

@@ -2,7 +2,6 @@
 apiVersion: admissionregistration.k8s.io/v1
 kind: MutatingWebhookConfiguration
 metadata:
-  creationTimestamp: null
   name: mutating-webhook-configuration
 webhooks:
 - admissionReviewVersions:
@@ -27,11 +26,11 @@ webhooks:
     resources:
     - cronjobs
   sideEffects: None
+  timeoutSeconds: 10
 ---
 apiVersion: admissionregistration.k8s.io/v1
 kind: ValidatingWebhookConfiguration
 metadata:
-  creationTimestamp: null
   name: validating-webhook-configuration
 webhooks:
 - admissionReviewVersions:
@@ -56,6 +55,7 @@ webhooks:
     resources:
     - cronjobs
   sideEffects: None
+  timeoutSeconds: 10
 - admissionReviewVersions:
   - v1
   - v1beta1
@@ -78,3 +78,4 @@ webhooks:
     resources:
     - cronjobs
   sideEffects: NoneOnDryRun
+  timeoutSeconds: 10

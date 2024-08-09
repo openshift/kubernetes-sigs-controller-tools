@@ -18,7 +18,6 @@ package crd_test
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 
 	"github.com/google/go-cmp/cmp"
@@ -101,9 +100,9 @@ var _ = Describe("CRD Generation From Parsing to CustomResourceDefinition", func
 			}
 		})
 
-		assertCRD := func(pkg *loader.Package, kind, fileName string) {
-			By(fmt.Sprintf("requesting that the %s CRD be generated", kind))
-			groupKind := schema.GroupKind{Kind: kind, Group: "testdata.kubebuilder.io"}
+		assertCRDForGroupKind := func(pkg *loader.Package, groupKind schema.GroupKind, fileName string) {
+			kind := groupKind.Kind
+			By(fmt.Sprintf("requesting that the %s CRD be generated in group %s", kind, groupKind.Group))
 			parser.NeedCRDFor(groupKind, nil)
 
 			By(fmt.Sprintf("fixing top level ObjectMeta on the %s CRD", kind))
@@ -116,7 +115,7 @@ var _ = Describe("CRD Generation From Parsing to CustomResourceDefinition", func
 			ExpectWithOffset(1, parser.CustomResourceDefinitions).To(HaveKey(groupKind))
 
 			By(fmt.Sprintf("loading the desired %s YAML", kind))
-			expectedFile, err := ioutil.ReadFile(fileName)
+			expectedFile, err := os.ReadFile(fileName)
 			ExpectWithOffset(1, err).NotTo(HaveOccurred())
 
 			By(fmt.Sprintf("parsing the desired %s YAML", kind))
@@ -130,6 +129,22 @@ var _ = Describe("CRD Generation From Parsing to CustomResourceDefinition", func
 
 			By(fmt.Sprintf("comparing the two %s CRDs", kind))
 			ExpectWithOffset(1, parser.CustomResourceDefinitions[groupKind]).To(Equal(crd), "type not as expected, check pkg/crd/testdata/README.md for more details.\n\nDiff:\n\n%s", cmp.Diff(parser.CustomResourceDefinitions[groupKind], crd))
+		}
+
+		assertCRD := func(pkg *loader.Package, kind, fileName string) {
+			assertCRDForGroupKind(pkg, schema.GroupKind{Group: "testdata.kubebuilder.io", Kind: kind}, fileName)
+		}
+
+		assertError := func(pkg *loader.Package, kind, errorMsg string) {
+			By(fmt.Sprintf("requesting that the %s CRD be generated", kind))
+			groupKind := schema.GroupKind{Kind: kind, Group: "testdata.kubebuilder.io"}
+			parser.NeedCRDFor(groupKind, nil)
+
+			By(fmt.Sprintf("fixing top level ObjectMeta on the %s CRD", kind))
+			crd.FixTopLevelMetadata(parser.CustomResourceDefinitions[groupKind])
+
+			By("checking that specific errors occurred along the way")
+			Expect(packageErrors(pkg)).To(MatchError(ContainSubstring(errorMsg)))
 		}
 
 		Context("CronJob API", func() {
@@ -160,6 +175,26 @@ var _ = Describe("CRD Generation From Parsing to CustomResourceDefinition", func
 			It("should successfully generate the CronJob and Job CRDs", func() {
 				assertCRD(pkgs[0], "CronJob", "testdata.kubebuilder.io_cronjobs.yaml")
 				assertCRD(pkgs[3], "Job", "testdata.kubebuilder.io_jobs.yaml")
+			})
+		})
+
+		Context("CronJob API with Wrong Annotation Format", func() {
+			BeforeEach(func() {
+				pkgPaths = []string{"./wrong_annotation_format"}
+				expPkgLen = 1
+			})
+			It("can not successfully generate the CronJob CRD", func() {
+				assertError(pkgs[0], "CronJob", "is not in 'xxx=xxx' format")
+			})
+		})
+
+		Context("CronJob API without group", func() {
+			BeforeEach(func() {
+				pkgPaths = []string{"./nogroup"}
+				expPkgLen = 1
+			})
+			It("should successfully generate the CronJob CRD", func() {
+				assertCRDForGroupKind(pkgs[0], schema.GroupKind{Kind: "CronJob"}, "testdata._cronjobs.yaml")
 			})
 		})
 	})
@@ -197,7 +232,7 @@ var _ = Describe("CRD Generation From Parsing to CustomResourceDefinition", func
 		crd.FixTopLevelMetadata(parser.CustomResourceDefinitions[groupKind])
 
 		By("loading the desired YAML")
-		expectedFile, err := ioutil.ReadFile("plural.example.com_testquotas.yaml")
+		expectedFile, err := os.ReadFile("plural.example.com_testquotas.yaml")
 		Expect(err).NotTo(HaveOccurred())
 
 		By("parsing the desired YAML")
@@ -244,4 +279,52 @@ var _ = Describe("CRD Generation From Parsing to CustomResourceDefinition", func
 		By("checking that no errors occurred along the way (expect for type errors)")
 		Expect(packageErrors(cronJobPkg, packages.TypeError)).NotTo(HaveOccurred())
 	})
+
+	It("should generate markers properly among several package versions", func() {
+		By("switching into testdata to appease go modules")
+		cwd, err := os.Getwd()
+		Expect(err).NotTo(HaveOccurred())
+		Expect(os.Chdir("./testdata/multiple_versions")).To(Succeed())
+		defer func() { Expect(os.Chdir(cwd)).To(Succeed()) }()
+
+		By("loading the roots")
+		pkgs, err := loader.LoadRoots("./v1beta1", "./v1beta2")
+		Expect(err).NotTo(HaveOccurred())
+		Expect(pkgs).To(HaveLen(2))
+
+		By("setting up the parser")
+		reg := &markers.Registry{}
+		Expect(crdmarkers.Register(reg)).To(Succeed())
+		parser := &crd.Parser{
+			Collector: &markers.Collector{Registry: reg},
+			Checker:   &loader.TypeChecker{},
+		}
+		crd.AddKnownTypes(parser)
+
+		By("requesting that the package be parsed")
+		for _, pkg := range pkgs {
+			parser.NeedPackage(pkg)
+		}
+
+		By("requesting that the CRD be generated")
+		groupKind := schema.GroupKind{Kind: "VersionedResource", Group: "testdata.kubebuilder.io"}
+		parser.NeedCRDFor(groupKind, nil)
+
+		By("fixing top level ObjectMeta on the CRD")
+		crd.FixTopLevelMetadata(parser.CustomResourceDefinitions[groupKind])
+
+		By("loading the desired YAML")
+		expectedFile, err := os.ReadFile("testdata.kubebuilder.io_versionedresources.yaml")
+		Expect(err).NotTo(HaveOccurred())
+
+		By("parsing the desired YAML")
+		var crd apiext.CustomResourceDefinition
+		Expect(yaml.Unmarshal(expectedFile, &crd)).To(Succeed())
+		// clear the annotations -- we don't care about the attribution annotation
+		crd.Annotations = nil
+
+		By("comparing the two")
+		Expect(parser.CustomResourceDefinitions[groupKind]).To(Equal(crd), "type not as expected, check pkg/crd/testdata/README.md for more details.\n\nDiff:\n\n%s", cmp.Diff(parser.CustomResourceDefinitions[groupKind], crd))
+	})
+
 })

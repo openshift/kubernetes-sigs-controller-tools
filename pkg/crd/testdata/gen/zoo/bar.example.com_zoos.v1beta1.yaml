@@ -4,14 +4,13 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: (devel)
-  creationTimestamp: null
   name: zoos.bar.example.com
 spec:
   group: bar.example.com
   names:
     kind: Zoo
     listKind: ZooList
-    plural: zooes
+    plural: zoos
     singular: zoo
   scope: Namespaced
   validation:

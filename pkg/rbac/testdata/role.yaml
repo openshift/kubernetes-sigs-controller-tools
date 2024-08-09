@@ -1,9 +1,7 @@
-
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  creationTimestamp: null
   name: manager-role
 rules:
 - apiGroups:
@@ -53,12 +51,61 @@ rules:
   - get
   - patch
   - update
-
+- apiGroups:
+  - deduplicate-all
+  - deduplicate-all-group
+  resources:
+  - bar
+  - foo
+  verbs:
+  - get
+  - list
+- apiGroups:
+  - deduplicate-groups1
+  - deduplicate-groups2
+  - deduplicate-groups3
+  resources:
+  - foo
+  verbs:
+  - patch
+- apiGroups:
+  - deduplicate-resources
+  resources:
+  - one
+  - three
+  - two
+  verbs:
+  - create
+- apiGroups:
+  - deduplicate-verbs
+  resources:
+  - some
+  verbs:
+  - get
+  - list
+- apiGroups:
+  - not-deduplicate-groups1
+  - not-deduplicate-resources
+  resources:
+  - some
+  verbs:
+  - get
+- apiGroups:
+  - not-deduplicate-groups2
+  resources:
+  - some
+  verbs:
+  - list
+- apiGroups:
+  - not-deduplicate-resources
+  resources:
+  - another
+  verbs:
+  - list
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
-  creationTimestamp: null
   name: manager-role
   namespace: park
 rules:
@@ -68,22 +115,15 @@ rules:
   - jobs
   verbs:
   - get
-
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
-  creationTimestamp: null
   name: manager-role
   namespace: zoo
 rules:
 - apiGroups:
   - art
-  resources:
-  - jobs
-  verbs:
-  - get
-- apiGroups:
   - wave
   resources:
   - jobs
