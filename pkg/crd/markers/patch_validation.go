@@ -62,7 +62,7 @@ func init() {
 			WithHelp(markers.SimpleHelp("OpenShift", "specifies the FeatureGate that is required to generate this field.")),
 	)
 	ValidationMarkers = append(ValidationMarkers,
-		must(markers.MakeDefinition(OpenShiftFeatureGateAwareXValidationMarkerName, markers.DescribesType, FeatureGateXValidation{})).
+		must(markers.MakeDefinition(OpenShiftFeatureGateAwareXValidationMarkerName, markers.DescribesField, FeatureGateXValidation{})).
 			WithHelp(markers.SimpleHelp("OpenShift", "specifies the FeatureGate that is required to generate this XValidation rule.")),
 	)
 }
