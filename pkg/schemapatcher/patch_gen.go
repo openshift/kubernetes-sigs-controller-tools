@@ -13,7 +13,7 @@ import (
 // mayHandleFile returns true if this manifest should progress past the file collection stage.
 // Currently, the only check is the feature-set annotation.
 func mayHandleFile(filename string, rawContent []byte) bool {
-	crdmarkers.FeatureGatesForCurrentFile = sets.String{}
+	crdmarkers.FeatureGatesForCurrentFile = sets.Set[string]{}
 
 	manifest := &unstructured.Unstructured{}
 	if err := kyaml.Unmarshal(rawContent, &manifest); err != nil {
@@ -23,7 +23,7 @@ func mayHandleFile(filename string, rawContent []byte) bool {
 	crdmarkers.FeatureGatesForCurrentFile = featureGatesFromManifest(manifest)
 
 	if len(crdmarkers.RequiredFeatureSets) > 0 {
-		manifestFeatureSets := sets.String{}
+		manifestFeatureSets := sets.Set[string]{}
 		if manifestFeatureSetString := manifest.GetAnnotations()["release.openshift.io/feature-set"]; len(manifestFeatureSetString) > 0 {
 			for _, curr := range strings.Split(manifestFeatureSetString, ",") {
 				manifestFeatureSets.Insert(curr)
@@ -35,8 +35,8 @@ func mayHandleFile(filename string, rawContent []byte) bool {
 	return true
 }
 
-func featureGatesFromManifest(manifest *unstructured.Unstructured) sets.String {
-	ret := sets.String{}
+func featureGatesFromManifest(manifest *unstructured.Unstructured) sets.Set[string] {
+	ret := sets.Set[string]{}
 	for existingAnnotation := range manifest.GetAnnotations() {
 		if strings.HasPrefix(existingAnnotation, "feature-gate.release.openshift.io/") {
 			featureGateName := existingAnnotation[len("feature-gate.release.openshift.io/"):]

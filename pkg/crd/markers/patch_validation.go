@@ -12,9 +12,9 @@ import (
 )
 
 // FeatureGatesForCurrentFile is reset every
-var FeatureGatesForCurrentFile = sets.String{}
+var FeatureGatesForCurrentFile = sets.Set[string]{}
 
-var RequiredFeatureSets = sets.NewString()
+var RequiredFeatureSets = sets.New[string]()
 
 func init() {
 	featureSet := os.Getenv("OPENSHIFT_REQUIRED_FEATURESET")
