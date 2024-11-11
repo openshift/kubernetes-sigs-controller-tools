@@ -127,7 +127,7 @@ type FeatureGateEnum struct {
 	FeatureGateNames []string `marker:"featureGate"`
 	// RequiredFeatureGateNames represents the required feature gates that must be enabled to enable this field.
 	// If any of the required feature gates are not enabled, the field will not be enabled.
-	RequiredFeatureGateNames []string `marker:"requiredFeatureGate"`
+	RequiredFeatureGateNames []string `marker:"requiredFeatureGate,optional"`
 	EnumValues               []string `marker:"enum"`
 }
 
@@ -166,7 +166,7 @@ type FeatureGateMaxItems struct {
 	FeatureGateNames []string `marker:"featureGate"`
 	// RequiredFeatureGateNames represents the required feature gates that must be enabled to enable this field.
 	// If any of the required feature gates are not enabled, the field will not be enabled.
-	RequiredFeatureGateNames []string `marker:"requiredFeatureGate"`
+	RequiredFeatureGateNames []string `marker:"requiredFeatureGate,optional"`
 	MaxItems                 int      `marker:"maxItems"`
 }
 
@@ -195,7 +195,7 @@ type FeatureGateXValidation struct {
 	FeatureGateNames []string `marker:"featureGate"`
 	// RequiredFeatureGateNames represents the required feature gates that must be enabled to enable this field.
 	// If any of the required feature gates are not enabled, the field will not be enabled.
-	RequiredFeatureGateNames []string `marker:"requiredFeatureGate"`
+	RequiredFeatureGateNames []string `marker:"requiredFeatureGate,optional"`
 	Rule                     string
 	Message                  string `marker:",optional"`
 }
