@@ -303,6 +303,10 @@ type CronJobSpec struct {
 	// +kubebuilder:validation:XValidation:rule="self.size() % 2 == 0",messageExpression="'Length has to be even but is ' + len(self.stringWithEvenLengthAndMessageExpression) + ' instead'"
 	StringWithEvenLengthAndMessageExpression string `json:"stringWithEvenLengthAndMessageExpression,omitempty"`
 
+	// Test of the expression-based validation on both field and type.
+	// +kubebuilder:validation:XValidation:rule="self.startsWith('good-')",message="must have good prefix"
+	StringWithEvenLengthAndGoodPrefix StringEvenType `json:"stringWithEvenLengthAndGoodPrefix,omitempty"`
+
 	// Test that we can add a forbidden field using XValidation Reason and FieldPath.
 	// The validation is applied to the spec struct itself and not the field.
 	ForbiddenInt int `json:"forbiddenInt,omitempty"`
@@ -321,7 +325,27 @@ type CronJobSpec struct {
 	// +listType=set
 	Hosts []string `json:"hosts,omitempty"`
 
+	// This tests slice item validation with enum
+	// +kubebuilder:validation:items:Enum=0;1;3
+	EnumSlice []int `json:"enumSlice,omitempty"`
+
 	HostsAlias Hosts `json:"hostsAlias,omitempty"`
+
+	// This tests that alias imported from a package is handled correctly. The
+	// corev1.IPFamilyPolicyType is just reused since it's available from
+	// imported package. We can create our own in a separate package if needed.
+	AliasFromPackage corev1.IPFamilyPolicyType `json:"aliasFromPackage,omitempty"`
+
+	// This tests that string alias is handled correctly.
+	StringAlias StringAlias `json:"stringAlias,omitempty"`
+
+	// This tests that validation on a string alias type is handled correctly.
+	// +kubebuilder:validation:MinLength=1
+	// +kubebuilder:validation:MaxLength=255
+	StringAliasAddedValidation StringAlias `json:"stringAliasAddedValidation,omitempty"`
+
+	// This tests that validation on a the string alias type itself is handled correctly.
+	StringAliasAlreadyValidated StringAliasWithValidation `json:"stringAliasAlreadyValidated,omitempty"`
 
 	// This tests string slice validation.
 	// +kubebuilder:validation:MinItems=2
@@ -338,7 +362,23 @@ type CronJobSpec struct {
 	// +kubebuilder:validation:items:XIntOrString
 	// +kubebuilder:validation:items:Pattern="^((100|[0-9]{1,2})%|[0-9]+)$"
 	IntOrStringArrayWithAPattern []*intstr.IntOrString `json:"intOrStringArrayWithAPattern,omitempty"`
+
+	// This tests that we can embed protocol correctly (without ending up with allOf).
+	// Context: https://github.com/kubernetes-sigs/controller-tools/issues/1027
+	// Defaults to "TCP".
+	// +optional
+	// +default="TCP"
+	Protocol corev1.Protocol `json:"protocol,omitempty" protobuf:"bytes,4,opt,name=protocol,casttype=Protocol"`
+
+	// This tests that selectable field.
+	SelectableFieldString string `json:"selectableFieldString,omitempty"`
 }
+
+type StringAlias = string
+
+// +kubebuilder:validation:MinLength=1
+// +kubebuilder:validation:MaxLength=255
+type StringAliasWithValidation = string
 
 type ContainsNestedMap struct {
 	InnerMap map[string]string `json:"innerMap,omitempty"`
@@ -585,6 +625,10 @@ const (
 	ReplaceConcurrent ConcurrencyPolicy = "Replace"
 )
 
+// StringEvenType is a type that includes an expression-based validation.
+// +kubebuilder:validation:XValidation:rule="self.size() % 2 == 0",message="must have even length"
+type StringEvenType string
+
 // CronJobStatus defines the observed state of CronJob
 type CronJobStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
@@ -619,6 +663,7 @@ type CronJobStatus struct {
 // +kubebuilder:resource:singular=mycronjob
 // +kubebuilder:storageversion
 // +kubebuilder:metadata:annotations="api-approved.kubernetes.io=https://github.com/kubernetes-sigs/controller-tools";"cert-manager.io/inject-ca-from-secret=cert-manager/cert-manager-webhook-ca"
+// +kubebuilder:selectablefield:JSONPath=`.spec.selectableFieldString`
 
 // CronJob is the Schema for the cronjobs API
 type CronJob struct {
