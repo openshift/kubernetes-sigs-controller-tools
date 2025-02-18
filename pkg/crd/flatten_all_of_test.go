@@ -21,7 +21,6 @@ import (
 	. "github.com/onsi/gomega"
 	. "github.com/onsi/gomega/gstruct"
 	apiext "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
-
 	"sigs.k8s.io/controller-tools/pkg/crd"
 )
 
@@ -238,6 +237,25 @@ var _ = Describe("AllOf Flattening", func() {
 						Type:  "int",
 						AllOf: []apiext.JSONSchemaProps{{MultipleOf: &defSeven}, {MultipleOf: &defEight}},
 					},
+				},
+			}))
+		})
+
+		It("should merge XValidation fields", func() {
+			By("flattening a schema with multiple validation fields")
+			original := &apiext.JSONSchemaProps{
+				AllOf: []apiext.JSONSchemaProps{
+					{XValidations: apiext.ValidationRules{{Rule: "rule2"}, {Rule: "rule3"}}},
+					{XValidations: apiext.ValidationRules{{Rule: "rule1"}}},
+				},
+			}
+			flattened := crd.FlattenEmbedded(original, errRec)
+			Expect(errRec.FirstError()).NotTo(HaveOccurred())
+
+			By("ensuring that the result lists all validation rules")
+			Expect(flattened).To(Equal(&apiext.JSONSchemaProps{
+				XValidations: []apiext.ValidationRule{
+					{Rule: "rule1"}, {Rule: "rule2"}, {Rule: "rule3"},
 				},
 			}))
 		})
