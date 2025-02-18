@@ -4,6 +4,26 @@ kind: ClusterRole
 metadata:
   name: manager-role
 rules:
+- nonResourceURLs:
+  - /another/url-to-duplicate
+  - /url-to-duplicate
+  verbs:
+  - get
+- apiGroups:
+  - ""
+  resources:
+  - deduplicate
+  - me
+  verbs:
+  - list
+- apiGroups:
+  - ""
+  - some-other-to-deduplicate-with-core
+  resources:
+  - me
+  verbs:
+  - get
+  - list
 - apiGroups:
   - art
   resources:
@@ -69,6 +89,12 @@ rules:
   verbs:
   - patch
 - apiGroups:
+  - deduplicate-groups4
+  resources:
+  - xyz
+  verbs:
+  - '*'
+- apiGroups:
   - deduplicate-resources
   resources:
   - one
@@ -107,6 +133,19 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
   name: manager-role
+  namespace: here
+rules:
+- apiGroups:
+  - deduplicate-groups5
+  resources:
+  - abc
+  verbs:
+  - '*'
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: manager-role
   namespace: park
 rules:
 - apiGroups:
@@ -129,3 +168,4 @@ rules:
   - jobs
   verbs:
   - get
+

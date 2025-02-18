@@ -19,9 +19,7 @@ package crd_test
 import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-
 	apiext "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
-
 	"sigs.k8s.io/controller-tools/pkg/crd"
 )
 
@@ -75,7 +73,7 @@ var _ = Describe("TruncateDescription", func() {
 		}
 		crd.TruncateDescription(schema, len(schema.Description)-2)
 		Expect(schema).To(Equal(&apiext.JSONSchemaProps{
-			Description: `This is top level description of the root obje`,
+			Description: `This is top level description of the root...`,
 		}))
 	})
 })

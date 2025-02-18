@@ -23,9 +23,11 @@ limitations under the License.
 package cronjob
 
 import (
+	"encoding"
 	"encoding/json"
 	"fmt"
 	"net/url"
+	"strconv"
 	"time"
 
 	batchv1beta1 "k8s.io/api/batch/v1beta1"
@@ -247,11 +249,12 @@ type CronJobSpec struct {
 	// +kubebuilder:validation:Schemaless
 	Schemaless []byte `json:"schemaless,omitempty"`
 
-	// This tests that an IntOrString can also have a pattern attached
-	// to it.
+	// This tests that an IntOrString can also have string validation.
 	// This can be useful if you want to limit the string to a percentage or integer.
 	// The XIntOrString marker is a requirement for having a pattern on this type.
 	// +kubebuilder:validation:XIntOrString
+	// +kubebuilder:validation:MaxLength=11
+	// +kubebuilder:validation:MinLength=2
 	// +kubebuilder:validation:Pattern="^((100|[0-9]{1,2})%|[0-9]+)$"
 	IntOrStringWithAPattern *intstr.IntOrString `json:"intOrStringWithAPattern,omitempty"`
 
@@ -303,6 +306,10 @@ type CronJobSpec struct {
 	// +kubebuilder:validation:XValidation:rule="self.size() % 2 == 0",messageExpression="'Length has to be even but is ' + len(self.stringWithEvenLengthAndMessageExpression) + ' instead'"
 	StringWithEvenLengthAndMessageExpression string `json:"stringWithEvenLengthAndMessageExpression,omitempty"`
 
+	// Test of the expression-based validation on both field and type.
+	// +kubebuilder:validation:XValidation:rule="self.startsWith('good-')",message="must have good prefix"
+	StringWithEvenLengthAndGoodPrefix StringEvenType `json:"stringWithEvenLengthAndGoodPrefix,omitempty"`
+
 	// Test that we can add a forbidden field using XValidation Reason and FieldPath.
 	// The validation is applied to the spec struct itself and not the field.
 	ForbiddenInt int `json:"forbiddenInt,omitempty"`
@@ -321,7 +328,28 @@ type CronJobSpec struct {
 	// +listType=set
 	Hosts []string `json:"hosts,omitempty"`
 
+	// This tests slice item validation with enum
+	// +kubebuilder:validation:items:Enum=0;1;3
+	EnumSlice []int `json:"enumSlice,omitempty"`
+
 	HostsAlias Hosts `json:"hostsAlias,omitempty"`
+
+	// This tests that alias imported from a package is handled correctly. The
+	// corev1.IPFamilyPolicyType is just reused since it's available from
+	// imported package. We can create our own in a separate package if needed.
+	AliasFromPackage corev1.IPFamilyPolicyType `json:"aliasFromPackage,omitempty"`
+
+	// This tests that string alias is handled correctly.
+	StringAlias    StringAlias  `json:"stringAlias,omitempty"`
+	StringAliasPtr *StringAlias `json:"stringAliasPtr,omitempty"`
+
+	// This tests that validation on a string alias type is handled correctly.
+	// +kubebuilder:validation:MinLength=1
+	// +kubebuilder:validation:MaxLength=255
+	StringAliasAddedValidation StringAlias `json:"stringAliasAddedValidation,omitempty"`
+
+	// This tests that validation on a the string alias type itself is handled correctly.
+	StringAliasAlreadyValidated StringAliasWithValidation `json:"stringAliasAlreadyValidated,omitempty"`
 
 	// This tests string slice validation.
 	// +kubebuilder:validation:MinItems=2
@@ -332,13 +360,46 @@ type CronJobSpec struct {
 	// +kubebuilder:validation:MinItems=3
 	LongerStringArray []LongerString `json:"longerStringArray,omitempty"`
 
-	// This tests that a slice of IntOrString can also have a pattern attached to it.
+	// This tests that a slice of IntOrString can also have string validation.
 	// This can be useful if you want to limit the string to a percentage or integer.
 	// The XIntOrString marker is a requirement for having a pattern on this type.
 	// +kubebuilder:validation:items:XIntOrString
+	// +kubebuilder:validation:items:MaxLength=10
+	// +kubebuilder:validation:items:MinLength=1
 	// +kubebuilder:validation:items:Pattern="^((100|[0-9]{1,2})%|[0-9]+)$"
 	IntOrStringArrayWithAPattern []*intstr.IntOrString `json:"intOrStringArrayWithAPattern,omitempty"`
+
+	// This tests that we can embed protocol correctly (without ending up with allOf).
+	// Context: https://github.com/kubernetes-sigs/controller-tools/issues/1027
+	// Defaults to "TCP".
+	// +optional
+	// +default="TCP"
+	Protocol corev1.Protocol `json:"protocol,omitempty" protobuf:"bytes,4,opt,name=protocol,casttype=Protocol"`
+
+	// This tests that selectable field.
+	SelectableFieldString string `json:"selectableFieldString,omitempty"`
+
+	// This tests that embedded struct, which is an alias type, is handled correctly.
+	InlineAlias `json:",inline"`
+
+	// Test that we can add a field that can only be set to a non-default value on updates using XValidation OptionalOldSelf.
+	// +kubebuilder:validation:XValidation:rule="oldSelf.hasValue() || self == 0",message="must be set to 0 on creation. can be set to any value on an update.",optionalOldSelf=true
+	OnlyAllowSettingOnUpdate int32 `json:"onlyAllowSettingOnUpdate,omitempty"`
 }
+
+type InlineAlias = EmbeddedStruct
+
+// EmbeddedStruct is for testing that embedded struct is handled correctly when it is used through an alias type.
+type EmbeddedStruct struct {
+	// FromEmbedded is a field from the embedded struct that was used through an alias type.
+	FromEmbedded string `json:"fromEmbedded,omitempty"`
+}
+
+type StringAlias = string
+
+// +kubebuilder:validation:MinLength=1
+// +kubebuilder:validation:MaxLength=255
+type StringAliasWithValidation = string
 
 type ContainsNestedMap struct {
 	InnerMap map[string]string `json:"innerMap,omitempty"`
@@ -552,6 +613,52 @@ func (u *URL2) String() string {
 	return (*url.URL)(u).String()
 }
 
+// URL3 wraps [net/url.URL]. It implements [encoding.TextMarshaler] so that it
+// can be used in K8s CRDs such that the CRD resource will have the URL but
+// operator code can can work with the URL struct.
+type URL3 struct{ url.URL }
+
+var _ encoding.TextMarshaler = (*URL3)(nil)
+
+// MarshalText implements [encoding.TextMarshaler].
+func (u *URL3) MarshalText() (text []byte, err error) {
+	return u.MarshalBinary()
+}
+
+// URL4 is newtype around [net/url.URL]. It implements [encoding.TextMarshaler]
+// so that it can be used in K8s CRDs such that the CRD resource will have the
+// URL but operator code can can work with the URL struct.
+type URL4 url.URL
+
+var _ encoding.TextMarshaler = (*URL4)(nil)
+
+// MarshalText implements [encoding.TextMarshaler].
+func (u *URL4) MarshalText() (text []byte, err error) {
+	return (*url.URL)(u).MarshalBinary()
+}
+
+// +kubebuilder:validation:Type=integer
+// +kubebuilder:validation:Format=int64
+// Time2 is a newtype around [metav1.Time].
+// It implements both [encoding.TextMarshaler] and [json.Marshaler].
+// The latter is authoritative for the CRD generation.
+type Time2 time.Time
+
+var _ interface {
+	encoding.TextMarshaler
+	json.Marshaler
+} = (*Time2)(nil)
+
+// MarshalText implements [encoding.TextMarshaler].
+func (t *Time2) MarshalText() (text []byte, err error) {
+	return []byte((*time.Time)(t).String()), nil
+}
+
+// MarshalJSON implements [json.Marshaler].
+func (t *Time2) MarshalJSON() ([]byte, error) {
+	return strconv.AppendInt(nil, (*time.Time)(t).UnixMilli(), 10), nil
+}
+
 // Duration has a custom Marshaler but no markers.
 // We want the CRD generation to infer type information
 // from the go types and ignore the presense of the Marshaler.
@@ -585,6 +692,10 @@ const (
 	ReplaceConcurrent ConcurrencyPolicy = "Replace"
 )
 
+// StringEvenType is a type that includes an expression-based validation.
+// +kubebuilder:validation:XValidation:rule="self.size() % 2 == 0",message="must have even length"
+type StringEvenType string
+
 // CronJobStatus defines the observed state of CronJob
 type CronJobStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
@@ -597,6 +708,10 @@ type CronJobStatus struct {
 	// Information when was the last time the job was successfully scheduled.
 	// +optional
 	LastScheduleTime *metav1.Time `json:"lastScheduleTime,omitempty"`
+
+	// Information when was the last time the job was successfully scheduled.
+	// +optional
+	LastScheduleTime2 Time2 `json:"lastScheduleTime2,omitempty"`
 
 	// Information about the last time the job was successfully scheduled,
 	// with microsecond precision.
@@ -611,6 +726,14 @@ type CronJobStatus struct {
 	// +optional
 	LastActiveLogURL2 *URL2 `json:"lastActiveLogURL2,omitempty"`
 
+	// LastActiveLogURL3 specifies the logging url for the last started job
+	// +optional
+	LastActiveLogURL3 *URL3 `json:"lastActiveLogURL3,omitempty"`
+
+	// LastActiveLogURL4 specifies the logging url for the last started job
+	// +optional
+	LastActiveLogURL4 *URL4 `json:"lastActiveLogURL4,omitempty"`
+
 	Runtime *Duration `json:"duration,omitempty"`
 }
 
@@ -619,6 +742,7 @@ type CronJobStatus struct {
 // +kubebuilder:resource:singular=mycronjob
 // +kubebuilder:storageversion
 // +kubebuilder:metadata:annotations="api-approved.kubernetes.io=https://github.com/kubernetes-sigs/controller-tools";"cert-manager.io/inject-ca-from-secret=cert-manager/cert-manager-webhook-ca"
+// +kubebuilder:selectablefield:JSONPath=`.spec.selectableFieldString`
 
 // CronJob is the Schema for the cronjobs API
 type CronJob struct {
