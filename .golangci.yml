@@ -19,14 +19,17 @@ linters:
     - errchkjson
     - errorlint
     - exhaustive
+    - forbidigo
     - ginkgolinter
     - goconst
     - gocritic
     - gocyclo
+    - godoclint
     - goprintffuncname
     - govet
     - importas
     - ineffassign
+    - iotamixing
     - makezero
     - misspell
     - nakedret
@@ -41,6 +44,12 @@ linters:
     - unused
     - whitespace
   settings:
+    forbidigo:
+        forbid:
+          - pattern: context.Background
+            msg: Use ginkgos SpecContext or go testings t.Context instead
+          - pattern: context.TODO
+            msg: Use ginkgos SpecContext or go testings t.Context instead
     govet:
       disable:
         - fieldalignment
