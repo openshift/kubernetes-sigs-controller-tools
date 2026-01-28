@@ -27,7 +27,7 @@ SHELL:=/usr/bin/env bash
 #
 # Go.
 #
-GO_VERSION ?= 1.24.0
+GO_VERSION ?= 1.25.0
 GOTOOLCHAIN = go$(GO_VERSION)
 export GOTOOLCHAIN
 
@@ -96,6 +96,7 @@ test-all:
 .PHONY: modules
 modules: ## Runs go mod to ensure modules are up to date.
 	go mod tidy
+	cd pkg/applyconfiguration/testdata/cronjob; go mod tidy
 
 .PHONY: verify-modules
 verify-modules: modules ## Verify go modules are up to date
@@ -140,6 +141,7 @@ release-envtest: clean-release ## Build the envtest binaries by operating system
 	OS=darwin ARCH=amd64 $(MAKE) release-envtest-docker-build
 	OS=darwin ARCH=arm64 $(MAKE) release-envtest-docker-build
 	OS=windows ARCH=amd64 $(MAKE) release-envtest-docker-build
+	OS=windows ARCH=arm64 $(MAKE) release-envtest-docker-build
 	./hack/envtest/update-releases.sh
 
 .PHONY: release-envtest-docker-build
@@ -167,6 +169,7 @@ release-controller-gen: clean-release ## Build controller-gen binaries.
 	RELEASE_BINARY=controller-gen-darwin-amd64      GOOS=darwin  GOARCH=amd64   $(MAKE) release-binary
 	RELEASE_BINARY=controller-gen-darwin-arm64      GOOS=darwin  GOARCH=arm64   $(MAKE) release-binary
 	RELEASE_BINARY=controller-gen-windows-amd64.exe GOOS=windows GOARCH=amd64   $(MAKE) release-binary
+	RELEASE_BINARY=controller-gen-windows-arm64.exe GOOS=windows GOARCH=arm64   $(MAKE) release-binary
 
 .PHONY: release-binary
 release-binary: $(RELEASE_DIR)
