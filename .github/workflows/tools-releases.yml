@@ -16,10 +16,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # tag=v4.2.2
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # tag=v6.0.2
       - name: Get changed files
         id: changed-files
-        uses: tj-actions/changed-files@ed68ef82c095e0d48ec87eccea555d944a631a4c # tag=v46.0.5
+        uses: tj-actions/changed-files@e0021407031f5be11a464abee9a0776171c79891 # tag=v47.0.1
         with:
           files: |
             hack/envtest/_matrix/*.yaml
@@ -39,7 +39,7 @@ jobs:
         run: |
           make release-envtest KUBERNETES_VERSION=${{ env.KUBERNETES_VERSION }}
       - name: Release
-        uses: softprops/action-gh-release@72f2c25fcb47643c292f7107632f7a47c1df5cd8 # tag=v2.3.2
+        uses: softprops/action-gh-release@a06a81a03ee405af7f2048a818ed3f03bbf83c7b # tag=v2.5.0
         with:
           tag_name: envtest-${{ env.KUBERNETES_VERSION }}
           draft: false
@@ -49,7 +49,7 @@ jobs:
             out/envtest-*.tar.gz.sha512
           fail_on_unmatched_files: true
       - name: Create Pull Request
-        uses: peter-evans/create-pull-request@271a8d0340265f705b14b6d32b9829c1cb33d45e # tag=v7.0.8
+        uses: peter-evans/create-pull-request@c0f553fe549906ede9cf27b5156039d195d2ece0 # tag=v8.1.0
         with:
           commit-message: Promote envtest release for Kubernetes ${{ env.KUBERNETES_VERSION }}
           title: ":seedling: Promotion of envtest release for Kubernetes ${{ env.KUBERNETES_VERSION }}"
