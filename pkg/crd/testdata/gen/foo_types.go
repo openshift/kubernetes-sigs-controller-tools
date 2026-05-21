@@ -13,8 +13,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-//go:generate ../../../../.run-controller-gen.sh crd:crdVersions=v1beta1 paths=. output:dir=.
-//go:generate mv bar.example.com_foos.yaml bar.example.com_foos.v1beta1.yaml
 //go:generate ../../../../.run-controller-gen.sh crd:crdVersions=v1 paths=. output:dir=.
 
 // +groupName=bar.example.com

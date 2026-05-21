@@ -16,7 +16,7 @@ limitations under the License.
 // TODO(directxman12): test this across both versions (right now we're just
 // trusting k/k conversion, which is probably fine though)
 
-//go:generate ../../../.run-controller-gen.sh crd:ignoreUnexportedFields=true,allowDangerousTypes=true paths=./;./deprecated;./unserved;./job/... output:dir=.
+//go:generate ../../../.run-controller-gen.sh crd:ignoreUnexportedFields=true,allowDangerousTypes=true paths=./;./deprecated;./unserved;./job/...;./immutable output:dir=.
 
 // +groupName=testdata.kubebuilder.io
 // +versionName=v1
@@ -60,6 +60,14 @@ type CronJobSpec struct {
 	// - "Replace": cancels currently running job and replaces it with a new one
 	// +optional
 	ConcurrencyPolicy ConcurrencyPolicy `json:"concurrencyPolicy,omitempty"`
+
+	// Specifies how to treat concurrent executions of a Job.
+	// Valid values are:
+	// - "Allow" (default): allows CronJobs to run concurrently;
+	// - "Forbid": forbids concurrent runs, skipping next run if previous run hasn't finished yet;
+	// - "Replace": cancels currently running job and replaces it with a new one
+	// +optional
+	K8sConcurrencyPolicy K8sConcurrencyPolicy `json:"k8sConcurrencyPolicy,omitempty"`
 
 	// This flag tells the controller to suspend subsequent executions, it does
 	// not apply to already started executions.  Defaults to false.
@@ -259,6 +267,7 @@ type CronJobSpec struct {
 
 	// This tests that the schemaless marker works
 	// +kubebuilder:validation:Schemaless
+	// +kubebuilder:validation:Type=string
 	Schemaless []byte `json:"schemaless,omitempty"`
 
 	// This tests that an IntOrString can also have string validation.
@@ -269,6 +278,12 @@ type CronJobSpec struct {
 	// +kubebuilder:validation:MinLength=2
 	// +kubebuilder:validation:Pattern="^((100|[0-9]{1,2})%|[0-9]+)$"
 	IntOrStringWithAPattern *intstr.IntOrString `json:"intOrStringWithAPattern,omitempty"`
+
+	// This tests that an IntOrString can have enum validation.
+	// The XIntOrString marker is required for applying enum to IntOrString.
+	// +kubebuilder:validation:XIntOrString
+	// +kubebuilder:validation:Enum=1;2;"foo";"bar"
+	IntOrStringWithEnum *intstr.IntOrString `json:"intOrStringWithEnum,omitempty"`
 
 	// Checks that nested maps work
 	NestedMap map[string]map[string]string `json:"nestedMap,omitempty"`
@@ -315,7 +330,10 @@ type CronJobSpec struct {
 	StringWithEvenLength string `json:"stringWithEvenLength,omitempty"`
 
 	// Test of the expression-based validation with messageExpression marker.
-	// +kubebuilder:validation:XValidation:rule="self.size() % 2 == 0",messageExpression="'Length has to be even but is ' + len(self.stringWithEvenLengthAndMessageExpression) + ' instead'"
+	// Due to a bug in the cost calculation we can not include the lenght in the message expression:
+	// https://github.com/kubernetes/kubernetes/issues/124234
+	//
+	// +kubebuilder:validation:XValidation:rule="self.size() % 2 == 0",messageExpression="self + ' has odd length, must be even'"
 	StringWithEvenLengthAndMessageExpression string `json:"stringWithEvenLengthAndMessageExpression,omitempty"`
 
 	// Test of the expression-based validation on both field and type.
@@ -742,6 +760,21 @@ const (
 
 	// ReplaceConcurrent cancels currently running job and replaces it with a new one.
 	ReplaceConcurrent ConcurrencyPolicy = "Replace"
+)
+
+// +k8s:enum
+type K8sConcurrencyPolicy string
+
+const (
+	// AllowK8sConcurrencyPolicy allows CronJobs to run concurrently.
+	AllowK8sConcurrencyPolicy K8sConcurrencyPolicy = "Allow"
+
+	// ForbidK8sConcurrencyPolicy forbids concurrent runs, skipping next run if previous
+	// hasn't finished yet.
+	ForbidK8sConcurrencyPolicy K8sConcurrencyPolicy = "Forbid"
+
+	// ReplaceK8sConcurrencyPolicy cancels currently running job and replaces it with a new one.
+	ReplaceK8sConcurrencyPolicy K8sConcurrencyPolicy = "Replace"
 )
 
 // StringEvenType is a type that includes an expression-based validation.

@@ -15,34 +15,4 @@ limitations under the License.
 
 package cronjob
 
-import (
-	"k8s.io/apimachinery/pkg/runtime"
-	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/webhook"
-)
-
-func (c *CronJob) SetupWebhookWithManager(mgr ctrl.Manager) error {
-	return ctrl.NewWebhookManagedBy(mgr).
-		For(c).
-		Complete()
-}
-
 // +kubebuilder:webhook:url="https://anothersomewebhook:9443/validate-testdata-kubebuilder-io-v1-cronjob",path="/somepath",verbs=create;update,mutating=false,failurePolicy=fail,matchPolicy=Equivalent,groups=testdata.kubebuilder.io,resources=cronjobs,versions=v1,name=validation.cronjob.testdata.kubebuilder.io,sideEffects=NoneOnDryRun,timeoutSeconds=10,admissionReviewVersions=v1;v1beta1
-
-var _ webhook.Defaulter = &CronJob{}
-var _ webhook.Validator = &CronJob{}
-
-func (c *CronJob) Default() {
-}
-
-func (c *CronJob) ValidateCreate() error {
-	return nil
-}
-
-func (c *CronJob) ValidateUpdate(_ runtime.Object) error {
-	return nil
-}
-
-func (c *CronJob) ValidateDelete() error {
-	return nil
-}

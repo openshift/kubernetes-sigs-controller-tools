@@ -27,7 +27,7 @@ SHELL:=/usr/bin/env bash
 #
 # Go.
 #
-GO_VERSION ?= 1.25.0
+GO_VERSION ?= 1.26.0
 GOTOOLCHAIN = go$(GO_VERSION)
 export GOTOOLCHAIN
 
@@ -91,16 +91,25 @@ test: ## Run the test.sh script which will check all.
 
 test-all:
 	$(MAKE) verify-modules
+	$(MAKE) verify-k8s-deps
 	$(MAKE) test
 
 .PHONY: modules
 modules: ## Runs go mod to ensure modules are up to date.
 	go mod tidy
-	cd pkg/applyconfiguration/testdata/cronjob; go mod tidy
+	@set -e; for mod in $(shell find . -path ./hack -prune -o -name go.mod -not -path ./go.mod -print); do \
+		dir=$$(dirname $$mod); \
+		echo "go mod tidy in $${dir}"; \
+		(cd $${dir} && go mod tidy); \
+	done
+
+.PHONY: verify-k8s-deps
+verify-k8s-deps:
+	./hack/verify-k8s-deps.sh
 
 .PHONY: verify-modules
 verify-modules: modules ## Verify go modules are up to date
-	@if !(git diff --quiet HEAD -- go.sum go.mod); then \
+	@if !(git diff --quiet HEAD); then \
 		git diff; \
 		echo "go module files are out of date, please run 'make modules'"; exit 1; \
 	fi

@@ -18,6 +18,8 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 	// Group=testdata.kubebuilder.io, Version=v1
 	case v1.SchemeGroupVersion.WithKind("AssociativeType"):
 		return &apiv1.AssociativeTypeApplyConfiguration{}
+	case v1.SchemeGroupVersion.WithKind("ClusterScopedResource"):
+		return &apiv1.ClusterScopedResourceApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("ContainsNestedMap"):
 		return &apiv1.ContainsNestedMapApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("CronJob"):
@@ -28,6 +30,8 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &apiv1.CronJobStatusApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("Duration"):
 		return &apiv1.DurationApplyConfiguration{}
+	case v1.SchemeGroupVersion.WithKind("EmbeddedExternalSpec"):
+		return &apiv1.EmbeddedExternalSpecApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("EmbeddedStruct"):
 		return &apiv1.EmbeddedStructApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("EmpiableObject"):

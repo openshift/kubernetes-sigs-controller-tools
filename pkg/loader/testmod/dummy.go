@@ -15,3 +15,5 @@ limitations under the License.
 */
 
 package dummy
+
+import _ "sigs.k8s.io/controller-tools/pkg/loader/testmod/submod1"

@@ -144,16 +144,14 @@ type CronJobSpecApplyConfiguration struct {
 	// Test of the expression-based validation rule marker, with optional message.
 	StringWithEvenLength *string `json:"stringWithEvenLength,omitempty"`
 	// Test of the expression-based validation with messageExpression marker.
+	// Due to a bug in the cost calculation we can not include the lenght in the message expression:
+	// https://github.com/kubernetes/kubernetes/issues/124234
 	StringWithEvenLengthAndMessageExpression *string `json:"stringWithEvenLengthAndMessageExpression,omitempty"`
 	// Test of the expression-based validation on both field and type.
 	StringWithEvenLengthAndGoodPrefix *apiv1.StringEvenType `json:"stringWithEvenLengthAndGoodPrefix,omitempty"`
 	// Test that we can add a forbidden field using XValidation Reason and FieldPath.
 	// The validation is applied to the spec struct itself and not the field.
 	ForbiddenInt *int `json:"forbiddenInt,omitempty"`
-	// Checks that fixed-length arrays work
-	Array *[3]int `json:"array,omitempty"`
-	// Checks that arrays work when the type contains a composite literal
-	ArrayUsingCompositeLiteral *[3]string `json:"arrayUsingCompositeLiteral,omitempty"`
 	// This tests string slice item validation.
 	Hosts []string `json:"hosts,omitempty"`
 	// This tests slice item validation with enum
@@ -184,6 +182,10 @@ type CronJobSpecApplyConfiguration struct {
 	EmbeddedStructApplyConfiguration `json:",inline"`
 	// Test that we can add a field that can only be set to a non-default value on updates using XValidation OptionalOldSelf.
 	OnlyAllowSettingOnUpdate *int32 `json:"onlyAllowSettingOnUpdate,omitempty"`
+	// EmbeddedExternal tests the ExternalApplyConfigurations feature.
+	EmbeddedExternal *EmbeddedExternalSpecApplyConfiguration `json:"embeddedExternal,omitempty"`
+	StructSlice      []RootObjectApplyConfiguration          `json:"structSlice,omitempty"`
+	StructMap        map[string]RootObjectApplyConfiguration `json:"structMap,omitempty"`
 }
 
 // CronJobSpecApplyConfiguration constructs a declarative configuration of the CronJobSpec type for use with
@@ -783,22 +785,6 @@ func (b *CronJobSpecApplyConfiguration) WithForbiddenInt(value int) *CronJobSpec
 	return b
 }
 
-// WithArray sets the Array field in the declarative configuration to the given value
-// and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the Array field is set to the value of the last call.
-func (b *CronJobSpecApplyConfiguration) WithArray(value [3]int) *CronJobSpecApplyConfiguration {
-	b.Array = &value
-	return b
-}
-
-// WithArrayUsingCompositeLiteral sets the ArrayUsingCompositeLiteral field in the declarative configuration to the given value
-// and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the ArrayUsingCompositeLiteral field is set to the value of the last call.
-func (b *CronJobSpecApplyConfiguration) WithArrayUsingCompositeLiteral(value [3]string) *CronJobSpecApplyConfiguration {
-	b.ArrayUsingCompositeLiteral = &value
-	return b
-}
-
 // WithHosts adds the given value to the Hosts field in the declarative configuration
 // and returns the receiver, so that objects can be build by chaining "With" function invocations.
 // If called multiple times, values provided by each call will be appended to the Hosts field.
@@ -916,5 +902,40 @@ func (b *CronJobSpecApplyConfiguration) WithFromEmbedded(value string) *CronJobS
 // If called multiple times, the OnlyAllowSettingOnUpdate field is set to the value of the last call.
 func (b *CronJobSpecApplyConfiguration) WithOnlyAllowSettingOnUpdate(value int32) *CronJobSpecApplyConfiguration {
 	b.OnlyAllowSettingOnUpdate = &value
+	return b
+}
+
+// WithEmbeddedExternal sets the EmbeddedExternal field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the EmbeddedExternal field is set to the value of the last call.
+func (b *CronJobSpecApplyConfiguration) WithEmbeddedExternal(value *EmbeddedExternalSpecApplyConfiguration) *CronJobSpecApplyConfiguration {
+	b.EmbeddedExternal = value
+	return b
+}
+
+// WithStructSlice adds the given value to the StructSlice field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, values provided by each call will be appended to the StructSlice field.
+func (b *CronJobSpecApplyConfiguration) WithStructSlice(values ...*RootObjectApplyConfiguration) *CronJobSpecApplyConfiguration {
+	for i := range values {
+		if values[i] == nil {
+			panic("nil value passed to WithStructSlice")
+		}
+		b.StructSlice = append(b.StructSlice, *values[i])
+	}
+	return b
+}
+
+// WithStructMap puts the entries into the StructMap field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, the entries provided by each call will be put on the StructMap field,
+// overwriting an existing map entries in StructMap field with the same key.
+func (b *CronJobSpecApplyConfiguration) WithStructMap(entries map[string]RootObjectApplyConfiguration) *CronJobSpecApplyConfiguration {
+	if b.StructMap == nil && len(entries) > 0 {
+		b.StructMap = make(map[string]RootObjectApplyConfiguration, len(entries))
+	}
+	for k, v := range entries {
+		b.StructMap[k] = v
+	}
 	return b
 }
