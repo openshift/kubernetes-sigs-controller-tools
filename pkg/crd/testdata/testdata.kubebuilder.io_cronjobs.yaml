@@ -267,6 +267,8 @@ spec:
                 description: FromEmbedded is a field from the embedded struct that
                   was used through an alias type.
                 type: string
+              fromPointer:
+                type: string
               hosts:
                 description: This tests string slice item validation.
                 items:
@@ -332,6 +334,23 @@ spec:
                 - foo
                 - bar
                 x-kubernetes-int-or-string: true
+              intOrStringWithEnumSlice:
+                description: |-
+                  This tests that a slice of  IntOrString can also have enum validation.
+                  The XIntOrString marker is required for applying enum to IntOrString.
+                items:
+                  anyOf:
+                  - type: integer
+                  - type: string
+                  enum:
+                  - 1
+                  - 2
+                  - foo
+                  - bar
+                  maxLength: 3
+                  minLength: 1
+                  x-kubernetes-int-or-string: true
+                type: array
               intWithValidations:
                 maximum: 2
                 minimum: -2
@@ -9352,6 +9371,32 @@ spec:
                 - bar
                 - foo
                 type: object
+              k8sAssociativeList:
+                description: This tests that associative lists work using the +k8s:listType
+                  alias.
+                items:
+                  properties:
+                    foo:
+                      type: string
+                    name:
+                      type: string
+                    secondary:
+                      type: integer
+                  required:
+                  - foo
+                  - name
+                  - secondary
+                  type: object
+                type: array
+                x-kubernetes-list-map-keys:
+                - name
+                x-kubernetes-list-type: map
+              k8sAtomicList:
+                description: This tests that +k8s:listType=atomic works.
+                items:
+                  type: string
+                type: array
+                x-kubernetes-list-type: atomic
               k8sConcurrencyPolicy:
                 description: |-
                   Specifies how to treat concurrent executions of a Job.
@@ -9364,6 +9409,33 @@ spec:
                 - Forbid
                 - Replace
                 type: string
+              k8sNestedAssociativeList:
+                description: This tests that associative lists work via a nested type
+                  using the +k8s:listType alias.
+                items:
+                  properties:
+                    foo:
+                      type: string
+                    name:
+                      type: string
+                    secondary:
+                      type: integer
+                  required:
+                  - foo
+                  - name
+                  - secondary
+                  type: object
+                type: array
+                x-kubernetes-list-map-keys:
+                - name
+                - secondary
+                x-kubernetes-list-type: map
+              k8sSetList:
+                description: This tests that +k8s:listType=set works.
+                items:
+                  type: string
+                type: array
+                x-kubernetes-list-type: set
               kubernetesDefaultedEmptyMap:
                 additionalProperties:
                   type: string
@@ -9468,6 +9540,13 @@ spec:
                   fields
                 type: object
                 x-kubernetes-map-type: granular
+              mapOfTextMarshalerKeys:
+                additionalProperties:
+                  type: string
+                description: |-
+                  Maps keyed by a type that implements encoding.TextMarshaler are permitted,
+                  since such keys serialize to strings (just like TextMarshaler fields do).
+                type: object
               minMaxProperties:
                 description: This tests that min/max properties work
                 maxProperties: 2
@@ -9751,6 +9830,8 @@ spec:
             - int32WithValidations
             - intWithValidations
             - jobTemplate
+            - k8sAssociativeList
+            - k8sNestedAssociativeList
             - kubernetesDefaultedEmptyMap
             - kubernetesDefaultedEmptyObject
             - kubernetesDefaultedEmptySlice

@@ -1,4 +1,5 @@
 /*
+Copyright The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -212,8 +213,24 @@ type CronJobSpec struct {
 	// +listMapKey=secondary
 	AssociativeList []AssociativeType `json:"associativeList"`
 
+	// This tests that associative lists work using the +k8s:listType alias.
+	// +k8s:listType=map
+	// +k8s:listMapKey=name
+	K8sAssociativeList []AssociativeType `json:"k8sAssociativeList"`
+
+	// This tests that +k8s:listType=set works.
+	// +k8s:listType=set
+	K8sSetList []string `json:"k8sSetList,omitempty"`
+
+	// This tests that +k8s:listType=atomic works.
+	// +k8s:listType=atomic
+	K8sAtomicList []string `json:"k8sAtomicList,omitempty"`
+
 	// This tests that associative lists work via a nested type.
 	NestedAssociativeList NestedAssociativeList `json:"nestedassociativeList"`
+
+	// This tests that associative lists work via a nested type using the +k8s:listType alias.
+	K8sNestedAssociativeList K8sNestedAssociativeList `json:"k8sNestedAssociativeList"`
 
 	// A map that allows different actors to manage different fields
 	// +mapType=granular
@@ -296,6 +313,10 @@ type CronJobSpec struct {
 
 	// Maps of arrays of things-that-aren’t-strings are permitted
 	MapOfArraysOfFloats map[string][]bool `json:"mapOfArraysOfFloats,omitempty"`
+
+	// Maps keyed by a type that implements encoding.TextMarshaler are permitted,
+	// since such keys serialize to strings (just like TextMarshaler fields do).
+	MapOfTextMarshalerKeys map[URL3]string `json:"mapOfTextMarshalerKeys,omitempty"`
 
 	// +kubebuilder:validation:Minimum=-0.5
 	// +kubebuilder:validation:Maximum=1.5
@@ -404,6 +425,14 @@ type CronJobSpec struct {
 	// +kubebuilder:validation:items:Pattern="^((100|[0-9]{1,2})%|[0-9]+)$"
 	IntOrStringArrayWithAPattern []*intstr.IntOrString `json:"intOrStringArrayWithAPattern,omitempty"`
 
+	// This tests that a slice of  IntOrString can also have enum validation.
+	// The XIntOrString marker is required for applying enum to IntOrString.
+	// +kubebuilder:validation:items:XIntOrString
+	// +kubebuilder:validation:items:MaxLength=3
+	// +kubebuilder:validation:items:MinLength=1
+	// +kubebuilder:validation:items:Enum=1;2;"foo";"bar"
+	IntOrStringWithEnumSlice []intstr.IntOrString `json:"intOrStringWithEnumSlice,omitempty"`
+
 	// This tests that we can embed protocol correctly (without ending up with allOf).
 	// Context: https://github.com/kubernetes-sigs/controller-tools/issues/1027
 	// Defaults to "TCP".
@@ -416,6 +445,9 @@ type CronJobSpec struct {
 
 	// This tests that embedded struct, which is an alias type, is handled correctly.
 	InlineAlias `json:",inline"`
+
+	// Tests pointer embedded struct with inline tag.
+	*InlinePointerStruct `json:",inline"`
 
 	// Test that we can add a field that can only be set to a non-default value on updates using XValidation OptionalOldSelf.
 	// +kubebuilder:validation:XValidation:rule="oldSelf.hasValue() || self == 0",message="must be set to 0 on creation. can be set to any value on an update.",optionalOldSelf=true
@@ -452,6 +484,11 @@ type InlineAlias = EmbeddedStruct
 type EmbeddedStruct struct {
 	// FromEmbedded is a field from the embedded struct that was used through an alias type.
 	FromEmbedded string `json:"fromEmbedded,omitempty"`
+}
+
+// InlinePointerStruct tests pointer embedded struct with inline tag.
+type InlinePointerStruct struct {
+	FromPointer string `json:"fromPointer,omitempty"`
 }
 
 type StringAlias = string
@@ -554,6 +591,11 @@ type AssociativeType struct {
 // +listMapKey=name
 // +listMapKey=secondary
 type NestedAssociativeList []AssociativeType
+
+// +k8s:listType=map
+// +k8s:listMapKey=name
+// +k8s:listMapKey=secondary
+type K8sNestedAssociativeList []AssociativeType
 
 // +mapType=granular
 type NestedMapOfInfo map[string][]byte

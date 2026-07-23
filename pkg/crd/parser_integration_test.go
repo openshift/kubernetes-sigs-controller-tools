@@ -21,7 +21,7 @@ import (
 	"os"
 
 	"github.com/google/go-cmp/cmp"
-	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"golang.org/x/tools/go/packages"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
@@ -210,6 +210,20 @@ var _ = Describe("CRD Generation From Parsing to CustomResourceDefinition", func
 			})
 		})
 
+		Context("Inline struct error", func() {
+			BeforeEach(func() {
+				pkgPaths = []string{"./inline_struct_error/..."}
+				expPkgLen = 1
+			})
+			It("should reject inline struct literals with a clear error message", func() {
+				groupKind := schema.GroupKind{Kind: "InlineStruct", Group: "testdata.kubebuilder.io"}
+				parser.NeedCRDFor(groupKind, nil)
+
+				expectedErr := "inline struct types are not supported, use a named type instead"
+				Expect(packageErrors(pkgs[0])).To(MatchError(ContainSubstring(expectedErr)))
+			})
+		})
+
 		Context("OneOf API with invalid marker", func() {
 			BeforeEach(func() {
 				pkgPaths = []string{"./oneof_error/..."}
@@ -221,6 +235,21 @@ var _ = Describe("CRD Generation From Parsing to CustomResourceDefinition", func
 				parser.NeedCRDFor(groupKind, nil)
 
 				expectedErr := "kubebuilder:validation:AtMostOneOf: cannot reference nested fields: field.foo,field.bar"
+				Expect(packageErrors(pkgs[0])).To(MatchError(ContainSubstring(expectedErr)))
+			})
+		})
+
+		Context("OneOf API with missing omitempty/omitzero tag", func() {
+			BeforeEach(func() {
+				pkgPaths = []string{"./oneof_missing_tag_error/..."}
+				expPkgLen = 1
+			})
+			It("should generate an error when OneOf field lacks omitempty or omitzero tag", func() {
+				kind := "Oneof"
+				groupKind := schema.GroupKind{Kind: kind, Group: "testdata.kubebuilder.io"}
+				parser.NeedCRDFor(groupKind, nil)
+
+				expectedErr := "field foo is part of OneOf constraint and must have omitempty or omitzero tag"
 				Expect(packageErrors(pkgs[0])).To(MatchError(ContainSubstring(expectedErr)))
 			})
 		})
@@ -275,6 +304,29 @@ var _ = Describe("CRD Generation From Parsing to CustomResourceDefinition", func
 			})
 			It("should successfully generate the CronJob CRD", func() {
 				assertCRDForGroupKind(pkgs[0], schema.GroupKind{Kind: "CronJob"}, "testdata._cronjobs.yaml")
+			})
+		})
+
+		Context("Type Alias API", func() {
+			BeforeEach(func() {
+				pkgPaths = []string{"./typealias_indirect"}
+				expPkgLen = 1
+			})
+			It("should handle types from indirectly imported packages via type aliases", func() {
+				By("verifying no errors occurred during package loading and parsing")
+				Expect(packageErrors(pkgs[0])).NotTo(HaveOccurred())
+
+				By("requesting schema for type with indirect alias")
+				typeIdent := crd.TypeIdent{
+					Package: pkgs[0],
+					Name:    "IndirectAliasSpec",
+				}
+				parser.NeedSchemaFor(typeIdent)
+
+				By("verifying the schema includes properties from the base type")
+				schema, found := parser.Schemata[typeIdent]
+				Expect(found).To(BeTrue(), "schema for IndirectAliasSpec should be generated")
+				Expect(schema.Properties).To(HaveKey("field"), "should have field property")
 			})
 		})
 	})

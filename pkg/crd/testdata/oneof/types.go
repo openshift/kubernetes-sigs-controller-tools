@@ -1,4 +1,5 @@
 /*
+Copyright The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -12,6 +13,8 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
+
+//go:generate ../../../../.run-controller-gen.sh crd:ignoreUnexportedFields=true,allowDangerousTypes=true paths=./... output:dir=..
 
 // +groupName=testdata.kubebuilder.io
 // +versionName=v1beta1
@@ -36,6 +39,12 @@ type OneofSpec struct {
 	TypeWithMultipleAtLeastOneofs *TypeWithMultipleAtLeastOneofs `json:"typeWithMultipleAtLeastOneOf,omitempty"`
 
 	TypeWithAllOneOf *TypeWithAllOneofs `json:"typeWithAllOneOf,omitempty"`
+
+	TypeWithOmitZero *TypeWithOmitZero `json:"typeWithOmitZero,omitempty"`
+
+	TypeWithOmitZeroExact *TypeWithOmitZeroExact `json:"typeWithOmitZeroExact,omitempty"`
+
+	TypeWithOmitZeroAtLeastOneOf *TypeWithOmitZeroAtLeastOneOf `json:"typeWithOmitZeroAtLeastOneOf,omitempty"`
 
 	FirstCustomTypeAlias CustomTypeAlias `json:"firstCustomTypeAlias,omitempty"`
 
@@ -98,6 +107,24 @@ type TypeWithAllOneofs struct {
 
 	E *string `json:"e,omitempty"`
 	F *string `json:"f,omitempty"`
+}
+
+// +kubebuilder:validation:AtMostOneOf=foo;bar
+type TypeWithOmitZero struct {
+	Foo *string `json:"foo,omitzero"`
+	Bar *string `json:"bar,omitzero"`
+}
+
+// +kubebuilder:validation:ExactlyOneOf=a;b
+type TypeWithOmitZeroExact struct {
+	A *string `json:"a,omitzero"`
+	B *string `json:"b,omitzero"`
+}
+
+// +kubebuilder:validation:AtLeastOneOf=c;d
+type TypeWithOmitZeroAtLeastOneOf struct {
+	C *string `json:"c,omitzero"`
+	D *string `json:"d,omitzero"`
 }
 
 // CustomTypeAlias is a custom alias

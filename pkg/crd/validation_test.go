@@ -1,3 +1,19 @@
+/*
+Copyright The Kubernetes Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
 package crd_test
 
 import (
@@ -123,6 +139,94 @@ spec:
     c: "c"
 `,
 			wantErr: `spec.typeWithAllOneOf: Invalid value: at least one of the fields in [e f] must be set`,
+		},
+		{
+			name: "satisfies AtMostOneOf constraint with omitzero fields",
+			obj: `---
+kind: Oneof
+apiVersion: testdata.kubebuilder.io/v1beta1
+metadata:
+  name: test
+spec:
+  typeWithOmitZero:
+    foo: "foo"
+`,
+		},
+		{
+			name: "AtMostOneOf constraint violated with omitzero fields",
+			obj: `---
+kind: Oneof
+apiVersion: testdata.kubebuilder.io/v1beta1
+metadata:
+  name: test
+spec:
+  typeWithOmitZero:
+    foo: "foo"
+    bar: "bar"
+`,
+			wantErr: `spec.typeWithOmitZero: Invalid value: at most one of the fields in [foo bar] may be set`,
+		},
+		{
+			name: "satisfies ExactlyOneOf constraint with omitzero fields",
+			obj: `---
+kind: Oneof
+apiVersion: testdata.kubebuilder.io/v1beta1
+metadata:
+  name: test
+spec:
+  typeWithOmitZeroExact:
+    a: "a"
+`,
+		},
+		{
+			name: "ExactlyOneOf constraint violated by specifying both omitzero fields",
+			obj: `---
+kind: Oneof
+apiVersion: testdata.kubebuilder.io/v1beta1
+metadata:
+  name: test
+spec:
+  typeWithOmitZeroExact:
+    a: "a"
+    b: "b"
+`,
+			wantErr: `spec.typeWithOmitZeroExact: Invalid value: exactly one of the fields in [a b] must be set`,
+		},
+		{
+			name: "ExactlyOneOf constraint violated by specifying no omitzero fields",
+			obj: `---
+kind: Oneof
+apiVersion: testdata.kubebuilder.io/v1beta1
+metadata:
+  name: test
+spec:
+  typeWithOmitZeroExact: {}
+`,
+			wantErr: `spec.typeWithOmitZeroExact: Invalid value: exactly one of the fields in [a b] must be set`,
+		},
+		{
+			name: "satisfies AtLeastOneOf constraint with omitzero fields",
+			obj: `---
+kind: Oneof
+apiVersion: testdata.kubebuilder.io/v1beta1
+metadata:
+  name: test
+spec:
+  typeWithOmitZeroAtLeastOneOf:
+    c: "c"
+`,
+		},
+		{
+			name: "AtLeastOneOf constraint violated by specifying no omitzero fields",
+			obj: `---
+kind: Oneof
+apiVersion: testdata.kubebuilder.io/v1beta1
+metadata:
+  name: test
+spec:
+  typeWithOmitZeroAtLeastOneOf: {}
+`,
+			wantErr: `spec.typeWithOmitZeroAtLeastOneOf: Invalid value: at least one of the fields in [c d] must be set`,
 		},
 	}
 
